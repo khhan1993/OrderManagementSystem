@@ -1,0 +1,6 @@
+{
+  "host": "YOUR_DB_SERVER_ADDR",
+  "user": "YOUR_DB_SERVER_USER",
+  "password" : "YOUR_DB_SERVER_PASSWORD",
+  "database": "YOUR_DB_SERVER_DBNAME"
+}
