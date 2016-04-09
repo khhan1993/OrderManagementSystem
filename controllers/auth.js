@@ -7,7 +7,7 @@ var bcrypt = require('bcrypt');
 var unixTime = require('unix-time');
 var value_checker = require('../helper/value_checker');
 
-var signin = function(req, res, next) {
+function signin(req, res, next) {
 
     //필수 정보 받기.
     var email = req.body.email;
@@ -87,9 +87,9 @@ var signin = function(req, res, next) {
             return;
         }
     });
-};
+}
 
-var signup = function(req, res, next) {
+function signup(req, res, next) {
 
     //필수 정보 받기.
     var name = req.body.name;
@@ -167,7 +167,7 @@ var signup = function(req, res, next) {
             return;
         }
     });
-};
+}
 
 exports.signin = signin;
 exports.signup = signup;
