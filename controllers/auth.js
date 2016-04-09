@@ -1,10 +1,11 @@
+'use strict';
+
 var async = require('async');
 var jwt = require('jsonwebtoken');
 var app = require('../app');
 var bcrypt = require('bcrypt');
 var unixTime = require('unix-time');
 var value_checker = require('../helper/value_checker');
-var custom_error_handler = require('../helper/custom_error_handler');
 
 var signin = function(req, res, next) {
 
@@ -15,7 +16,10 @@ var signin = function(req, res, next) {
     //빈 값이 있는지 확인.
     var checklist = [email, password];
     if(value_checker.is_empty_check(checklist)) {
-        custom_error_handler('Required value is empty!', 400, next);
+        let custom_err = new Error('Required value is empty!');
+        custom_err.status = 400;
+        next(custom_err);
+
         return;
     }
 
@@ -30,14 +34,20 @@ var signin = function(req, res, next) {
                     callback(err);
                 }
                 else {
-                    //이메일이 존재하는지, 그리고 비밀번호가 맞는지 확인.
                     if(rows.length == 0 || !bcrypt.compareSync(password, rows[0].password)) {
-                        custom_error_handler('Wrong email or password!', 400, next);
+                        //이메일이 존재하는지, 그리고 비밀번호가 맞는지 확인.
+                        let custom_err = new Error('Wrong email or password!');
+                        custom_err.status = 400;
+                        next(custom_err);
+
                         return;
                     }
-                    //계정 활성화 여부 확인.
                     else if(rows[0].is_active == 0) {
-                        custom_error_handler('This account is not activated yet. Please activate it first.', 403, next);
+                        //계정 활성화 여부 확인.
+                        let custom_err = new Error('This account is not activated yet. Please activate it first.');
+                        custom_err.status = 400;
+                        next(custom_err);
+
                         return;
                     }
                     else {
@@ -49,7 +59,10 @@ var signin = function(req, res, next) {
     ],
     function(err, results) {
         if(err) {
-            custom_error_handler('Database query error!', 500, next);
+            let custom_err = new Error('Database query error!');
+            custom_err.status = 500;
+            next(custom_err);
+
             return;
         }
         else {
@@ -86,7 +99,10 @@ var signup = function(req, res, next) {
     //빈 값이 있는지 확인.
     var checklist = [name, email, password];
     if(value_checker.is_empty_check(checklist)) {
-        custom_error_handler('Required value is empty!', 400, next);
+        let custom_err = new Error('Required value is empty!');
+        custom_err.status = 400;
+        next(custom_err);
+
         return;
     }
 
@@ -102,7 +118,10 @@ var signup = function(req, res, next) {
                 }
                 else {
                     if(rows[0].check_count > 0) {
-                        custom_error_handler('Email already exists!', 400, next);
+                        let custom_err = new Error('Email already exists!');
+                        custom_err.status = 400;
+                        next(custom_err);
+
                         return;
                     }
                     else {
@@ -132,7 +151,10 @@ var signup = function(req, res, next) {
     ],
     function(err, results) {
         if(err) {
-            custom_error_handler('Database query error!', 500, next);
+            let custom_err = new Error('Database query error!');
+            custom_err.status = 500;
+            next(custom_err);
+
             return;
         }
         else {
