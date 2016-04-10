@@ -66,7 +66,7 @@ app.use(function(err, req, res, next) {
   res.jsonp({
     status: false,
     message: err.message,
-    data: {}
+    data: null
   });
 });
 
