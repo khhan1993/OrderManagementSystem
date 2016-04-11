@@ -47,7 +47,7 @@ if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.jsonp({
-      status: false,
+      state: false,
       message: err.message,
       data: err.stack
     });
@@ -64,7 +64,7 @@ if (app.get('env') === 'development') {
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.jsonp({
-    status: false,
+    state: false,
     message: err.message,
     data: null
   });
