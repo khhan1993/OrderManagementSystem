@@ -10,6 +10,7 @@ router.post('/auth/signin', auth.signin);
 
 //그룹과 관련된 Routes.
 router.post('/group/create', group.create);
+router.get('/group/info/:group_id', group.info);
 router.post('/group/join', group.join);
 router.post('/group/left', group.left);
 router.get('/group/list', group.list);
