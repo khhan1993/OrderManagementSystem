@@ -13,11 +13,13 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
 
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/custom.css">
+    <link rel="stylesheet" href="css/pace.css">
 </head>
 <body>
-    <nav class="navbar navbar-default navbar-fixed-top">
+    <nav class="navbar navbar-default navbar-fixed-top" data-ng-controller="topNavbarController">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -30,34 +32,33 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li class="dropdown" data-ui-sref-active="active">
+                    <li class="dropdown" data-ng-show="is_access_token_set" data-ui-sref-active="active">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">그룹 <span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li data-ui-sref-active="active"><a data-ui-sref="group.create">새로 만들기</a></li>
-                            <li data-ui-sref-active="active"><a data-ui-sref="group.current">현재 그룹 정보</a></li>
+                            <li data-ng-show="(selected_group != null)" data-ui-sref-active="active"><a data-ui-sref="group.current">현재 그룹 및 내 정보</a></li>
 
                             <li role="separator" class="divider"></li>
 
                             <li class="dropdown-header">그룹 선택</li>
-                            <li><a href="#">Separated link</a></li>
-                            <li><a href="#">One more separated link</a></li>
+                            <li data-ng-repeat="group in group_list"><a data-ng-click="select_group(group.id)">{{group.name}}</a></li>
                         </ul>
                     </li>
-                    <li class="dropdown" data-ui-sref-active="active">
+                    <li class="dropdown" data-ng-show="is_access_token_set && (selected_group != null)" data-ui-sref-active="active">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">주문 <span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li data-ui-sref-active="active"><a data-ui-sref="order.request">주문 입력</a></li>
                             <li data-ui-sref-active="active"><a data-ui-sref="order.confirm">주문 처리</a></li>
                         </ul>
                     </li>
-                    <li class="dropdown" data-ui-sref-active="active">
+                    <li class="dropdown" data-ng-show="is_access_token_set && (selected_group != null)" data-ui-sref-active="active">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">통계 <span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li data-ui-sref-active="active"><a data-ui-sref="statistics.status">주문 현황</a></li>
                             <li data-ui-sref-active="active"><a data-ui-sref="statistics.queue">메뉴별 대기열</a></li>
                         </ul>
                     </li>
-                    <li class="dropdown" data-ui-sref-active="active">
+                    <li class="dropdown" data-ng-show="is_access_token_set && (selected_group != null)" data-ui-sref-active="active">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">관리 <span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li data-ui-sref-active="active"><a data-ui-sref="manage.member">멤버 관리</a></li>
@@ -66,15 +67,15 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li class="active"><a href="./">Fixed top</a></li>
+                    <li><a data-ng-hide="is_access_token_set" data-ui-sref="auth.login">로그인</a></li>
+                    <li><a data-ng-hide="is_access_token_set" data-ui-sref="auth.register">회원가입</a></li>
+                    <li><a data-ng-show="is_access_token_set" href="" data-ng-click="logout()">로그아웃</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
     <div data-ui-view></div>
-
-
 
     <!-- Vendor JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
@@ -83,8 +84,10 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-cookies.min.js"></script>
     <script src="https://angular-ui.github.io/ui-router/release/angular-ui-router.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="js/pace.js"></script>
 
     <!-- Custom JS -->
     <script src="js/custom.js"></script>
+
 </body>
 </html>
