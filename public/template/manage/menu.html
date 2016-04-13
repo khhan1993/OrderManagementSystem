@@ -1,1 +1,53 @@
-menu
+<div class="row">
+    <div class="col-md-4 col-sm-4">
+        <div class="row">
+            <div class="col-md-12 col-sm-12">
+                <h3>메뉴 정보</h3>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>이름</th>
+                            <th>가격(<i class="fa fa-krw"></i>)</th>
+                            <th>활성</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-ng-repeat="menu in menus">
+                            <td>{{menu.id}}</td>
+                            <td>{{menu.name}}</td>
+                            <td><input class="custom-input" type="text" data-ng-value="menu.price" data-ng-model="menu.price" data-ng-blur="update_menu_price(menu, menu.is_available)"></td>
+                            <td>
+                                <a href="" data-ng-click="update_menu_state(menu, 0)"><span class="glyphicon glyphicon-ok" aria-hidden="true" data-ng-show="(menu.is_available == 1)"></span></a>
+                                <a href="" data-ng-click="update_menu_state(menu, 1)"><span class="glyphicon glyphicon-remove" aria-hidden="true" data-ng-show="(menu.is_available == 0)"></span></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-md-12 col-sm-12">
+                <h3>메뉴 추가</h3>
+                <form data-ng-submit="add_new_menu()">
+                    <div class="form-group">
+                        <label>이름</label>
+                        <input type="text" class="form-control" placeholder="이름 입력" data-ng-model="new_memu_name" data-ng-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>가격</label>
+                        <input type="text" class="form-control" placeholder="가격 입력" data-ng-model="new_menu_price" data-ng-required="true">
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8 col-sm-8">
+
+    </div>
+</div>

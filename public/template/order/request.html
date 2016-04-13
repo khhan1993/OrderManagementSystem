@@ -1,1 +1,45 @@
-request
+<div class="row">
+    <h3>주문 요청</h3>
+    <div class="col-md-6 col-sm-6">
+        <div class="row">
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>메뉴명</th>
+                        <th>가격(<i class="fa fa-krw"></i>)</th>
+                        <th>수량</th>
+                        <th>조작</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-ng-repeat="menu in menus" data-ng-class="(menu.is_available == 1) ? '' : 'warning'">
+                        <td>{{menu.id}}</td>
+                        <td>{{menu.name}}</td>
+                        <td>{{menu.price}}</td>
+                        <td>{{(!!menu.count) ? menu.count : (menu.count = 0)}}</td>
+                        <td>
+                            <div data-ng-show="(menu.is_available == 1)">
+                                <a href="" data-ng-click="menu_count_plus(menu)"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                                <a href="" data-ng-click="menu_count_minus(menu)"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></a>
+                                <a href="" data-ng-click="menu_count_reset(menu)"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>
+                            </div>
+                            <div data-ng-hide="(menu.is_available == 1)">
+                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="form-group">
+                <label>테이블 번호</label>
+                <input class="form-control input-lg" type="text" placeholder="테이블 번호 입력" data-ng-model="table_num">
+            </div>
+            <button type="button" class="btn btn-default btn-lg btn-block">총 가격(<i class="fa fa-krw"></i>): {{total_price}}</button>
+            <button type="button" class="btn btn-primary btn-lg btn-block" data-ng-click="order_request()">주문 요청하기</button>
+        </div>
+    </div>
+    <div class="col-md-6 col-sm-6">
+
+    </div>
+</div>
