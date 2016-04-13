@@ -6,6 +6,7 @@ var router = express.Router();
 var auth = require('../controllers/auth');
 var group = require('../controllers/group');
 var menu = require('../controllers/menu');
+var order = require('../controllers/order');
 
 //로그인, 로그아웃 및 회원가입과 관련된 Routes.
 router.post('/auth/signup', auth.signup);
@@ -22,6 +23,11 @@ router.get('/group/list', group.list);
 router.post('/menu/create', menu.create);
 router.post('/menu/update/:menu_id', menu.update);
 router.get('/menu/list', menu.list);
+
+//주문과 관련된 Routes.
+router.post('/order/request', order.request);
+router.post('/order/confirm/:order_id', order.confirm);
+router.get('/order/list', order.list);
 
 //해당하는 API가 없을 경우 404 Response.
 router.all('*', function(req, res, next) {
