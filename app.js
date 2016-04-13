@@ -13,7 +13,8 @@ var connection_obj = mysql.createConnection({
   host: mysql_connection_info.host,
   user: mysql_connection_info.user,
   password: mysql_connection_info.password,
-  database: mysql_connection_info.database
+  database: mysql_connection_info.database,
+  multipleStatements: true
 });
 
 var routes = require('./routes/index');
