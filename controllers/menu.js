@@ -38,7 +38,7 @@ function create(req, res, next) {
     //음이 아닌 정수인지 확인.
     var num_check_list = [price, group_id];
     if(!value_checker.is_positive_integer_check(num_check_list)) {
-        let custom_err = new Error('GroupID must be integer format!');
+        let custom_err = new Error('GroupID and Price must be integer format!');
         custom_err.status = 400;
         next(custom_err);
 
@@ -288,7 +288,7 @@ function list(req, res, next) {
         },
         //이제 리스트를 조회한다.
         function(callback) {
-            var queryStr = "SELECT * FROM `menus` WHERE `group_id` = ?";
+            var queryStr = "SELECT `id`, `name`, `price`, `is_available` FROM `menus` WHERE `group_id` = ?";
             var queryVal = [group_id];
             app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
