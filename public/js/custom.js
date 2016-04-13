@@ -32,11 +32,13 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
         })
         .state('order.request', {
             url: '/request',
-            templateUrl: 'template/order/request.html'
+            templateUrl: 'template/order/request.html',
+            controller: 'orderRequestController'
         })
         .state('order.confirm', {
             url: '/confirm',
-            templateUrl: 'template/order/confirm.html'
+            templateUrl: 'template/order/confirm.html',
+            controller: 'orderConfirmController'
         })
         .state('statistics', {
             abstract: true,
@@ -62,7 +64,8 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
         })
         .state('manage.menu', {
             url: '/menu',
-            templateUrl: 'template/manage/menu.html'
+            templateUrl: 'template/manage/menu.html',
+            controller: 'menuManageController'
         })
         .state('auth', {
             abstract: true,
@@ -253,4 +256,201 @@ OMS.controller('currentGroupController', function($rootScope, $scope, $http, $st
             $interval.cancel(token_valid_timer);
         }
     }, 1000);
+});
+
+OMS.controller('orderRequestController', function($rootScope, $scope, $http, $state, $cookies) {
+    $scope.get_menu_list = function() {
+        $http({
+            method: 'GET',
+            url: '/api/menu/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            $scope.menus = response.data.data;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+    
+    $scope.menu_count_plus = function(menu) {
+        menu.count += 1;
+        $scope.total_price += menu.price;
+    };
+
+    $scope.menu_count_minus = function(menu) {
+        menu.count -= 1;
+        if(menu.count < 0) {
+            menu.count = 0;
+        }
+        else {
+            $scope.total_price -= menu.price;
+        }
+    };
+
+    $scope.menu_count_reset = function(menu) {
+        $scope.total_price -= (menu.price * menu.count);
+        menu.count = 0;
+    };
+
+    $scope.order_request = function() {
+        $http({
+            method: 'POST',
+            url: '/api/order/request',
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                group_id: $cookies.get('selected_group'),
+                menus: $scope.menus,
+                table_num: $scope.table_num
+            }
+        }).then(function successCallback(response) {
+            alert("주문 요청이 완료되었습니다.\n주문번호는 " + response.data.data.insertId + "번 입니다.");
+            $scope.get_menu_list();
+            $scope.total_price = 0;
+            $scope.table_num = null;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.total_price = 0;
+    $scope.table_num = null;
+    
+    $scope.get_menu_list();
+});
+
+OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $state, $cookies) {
+    $scope.get_pending_list = function() {
+        $http({
+            method: 'GET',
+            url: '/api/order/list?group_id=' + $cookies.get('selected_group') + '&show_only_pending=1',
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            $scope.pending_list = response.data.data;
+            $scope.current_unixtime = parseInt((new Date()).getTime() / 1000);
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.get_elapsed_time_text = function(seconds) {
+        return parseInt(seconds / 60) + "분 " + parseInt(seconds % 60) + "초";
+    };
+
+    $scope.update_pending_data = function(order_id, is_approve) {
+        var confirm_check_message = "주문번호 " + order_id + "을(를) " + ((is_approve == true) ? "승인" : "취소") + "하시겠습니까?";
+        if(confirm(confirm_check_message)) {
+            $http({
+                method: 'POST',
+                url: '/api/order/confirm/' + order_id,
+                headers: {
+                    Authorization: $cookies.get('access_token')
+                },
+                data: {
+                    is_approve: is_approve
+                }
+            }).then(function successCallback(response) {
+                $scope.get_pending_list();
+            }, function errorCallback(response) {
+                alert(response.data.message);
+            });
+        }
+        else {
+
+        }
+
+    };
+    
+    $scope.show_order_content = function(content) {
+        var content_text = "";
+        for(var i in content) {
+            content_text += content[i].name + " " + content[i].count + "개\n";
+        }
+        alert(content_text);
+    };
+
+    $scope.get_pending_list();
+});
+
+OMS.controller('menuManageController', function($rootScope, $scope, $http, $state, $cookies) {
+
+    $scope.update_menu_price = function(menuObj, state) {
+        $http({
+            method: 'POST',
+            url: '/api/menu/update/' + menuObj.id,
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                price: menuObj.price,
+                is_available: state
+            }
+        }).then(function successCallback(response) {
+            //menuObj.is_available = !menuObj.is_available;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.update_menu_state = function(menuObj, state) {
+        $http({
+            method: 'POST',
+            url: '/api/menu/update/' + menuObj.id,
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                price: menuObj.price,
+                is_available: state
+            }
+        }).then(function successCallback(response) {
+            menuObj.is_available = !menuObj.is_available;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.get_menu_list = function() {
+        $http({
+            method: 'GET',
+            url: '/api/menu/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            $scope.menus = response.data.data;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.add_new_menu = function() {
+        $http({
+            method: 'POST',
+            url: '/api/menu/create',
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                name: $scope.new_memu_name,
+                price: $scope.new_menu_price,
+                group_id: $cookies.get('selected_group')
+            }
+        }).then(function successCallback(response) {
+            $scope.new_memu_name = null;
+            $scope.new_menu_price = null;
+            $scope.get_menu_list();
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.new_memu_name = null;
+    $scope.new_menu_price = null;
+
+    $scope.get_menu_list();
 });

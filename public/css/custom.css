@@ -2,3 +2,11 @@ body {
     padding-top: 70px;
     padding-bottom: 70px;
 }
+
+.custom-input {
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
