@@ -60,7 +60,8 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
         })
         .state('manage.member', {
             url: '/member',
-            templateUrl: 'template/manage/member.html'
+            templateUrl: 'template/manage/member.html',
+            controller: 'memberManageController'
         })
         .state('manage.menu', {
             url: '/menu',
@@ -374,6 +375,56 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $st
     };
 
     $scope.get_pending_list();
+});
+
+OMS.controller('memberManageController', function($rootScope, $scope, $http, $state, $cookies) {
+    
+    $scope.get_member_list = function() {
+        $http({
+            method: 'GET',
+            url: '/api/group/members?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            $scope.members = response.data.data;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.add_new_member = function() {
+        $http({
+            method: 'POST',
+            url: '/api/group/join',
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                user_id: $scope.user_id,
+                email: $scope.user_email,
+                group_id: $cookies.get('selected_group')
+            }
+        }).then(function successCallback(response) {
+            $scope.user_email = null;
+            $scope.get_member_list();
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+    
+    $scope.remove_exist_member = function() {
+        alert('아직 지원하지 않는 기능입니다.');
+    };
+
+    $scope.get_time_text = function(unixtime) {
+        var reg_date = new Date(unixtime * 1000);
+        return reg_date.getFullYear() + "년 " + reg_date.getMonth() + "월 " + reg_date.getDate() + "일 " + reg_date.getHours() + "시 " + reg_date.getMinutes() + "분";
+    };
+    
+    $scope.user_email = null;
+
+    $scope.get_member_list();
 });
 
 OMS.controller('menuManageController', function($rootScope, $scope, $http, $state, $cookies) {
