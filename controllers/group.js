@@ -218,11 +218,22 @@ function join(req, res, next) {
     //필수 정보 받기.
     var group_id = req.body.group_id;
     var user_id = req.body.user_id;
+    var email = req.body.email;
 
     //빈 값이 있는지 확인.
-    var checklist = [group_id, user_id];
+    var checklist = [group_id, user_id, email];
     if(value_checker.is_empty_check(checklist)) {
         let custom_err = new Error('Required value is empty!');
+        custom_err.status = 400;
+        next(custom_err);
+
+        return;
+    }
+
+    //음이 아닌 정수인지 확인.
+    var num_check_list = [group_id, user_id];
+    if(!value_checker.is_positive_integer_check(num_check_list)) {
+        let custom_err = new Error('GroupID and UserID must be integer format!');
         custom_err.status = 400;
         next(custom_err);
 
@@ -255,15 +266,15 @@ function join(req, res, next) {
         },
         //그 다음엔 추가할려는 유저가 이미 존재하는 유저인지 확인한다.
         function(callback) {
-            var queryStr = "SELECT COUNT(*) AS `check_count` FROM `users` WHERE `id` = ? AND `is_active` = ?";
-            var queryVal = [user_id, 1];
+            var queryStr = "SELECT COUNT(*) AS `check_count` FROM `users` WHERE `id` = ? AND `email` = ? AND `is_active` = 1";
+            var queryVal = [user_id, email];
             app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
                 else {
                     if(rows[0].check_count == 0) {
-                        let custom_err = new Error('Requested UserID is not avaliable!');
+                        let custom_err = new Error('Requested UserID or Email is not avaliable!');
                         custom_err.status = 400;
                         next(custom_err);
 
