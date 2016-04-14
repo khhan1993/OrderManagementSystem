@@ -310,7 +310,7 @@ function join(req, res, next) {
         //이제 유저를 이 그룹의 멤버로 추가한다.
         function(user_info, callback) {
             var queryStr = "INSERT INTO `members` SET `user_id` = ?, `group_id` = ?, `identifier` = ?, `created_at` = ?, `updated_at` = ?";
-            var queryVal = [user_info,id, group_id, sha512(user_id + "UNIQUE" + group_id).toString('hex'), unixTime(new Date()), unixTime(new Date())];
+            var queryVal = [user_info.id, group_id, sha512(user_info.id + "UNIQUE" + group_id).toString('hex'), unixTime(new Date()), unixTime(new Date())];
             app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
