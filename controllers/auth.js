@@ -137,7 +137,8 @@ function signup(req, res, next) {
                 name: name,
                 email: email,
                 password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
-                created_at: unixTime(new Date())
+                created_at: unixTime(new Date()),
+                updated_at: unixTime(new Date())
             };
             app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
