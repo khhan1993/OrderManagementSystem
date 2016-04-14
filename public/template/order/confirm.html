@@ -21,7 +21,7 @@
                         <td><a href="" data-ng-click="show_order_content(pending.content)">내역 보기</a></td>
                         <td>{{pending.total_price}}</td>
                         <td>{{pending.table_num}}</td>
-                        <td>{{get_elapsed_time_text(current_unixtime - pending.created_at)}} 지남</td>
+                        <td>{{get_elapsed_time_text(current_unixtime - pending.created_at)}} 전</td>
                         <td>
                             <a href="" data-ng-click="update_pending_data(pending.id, true)"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>
                             <a href=""  data-ng-click="update_pending_data(pending.id, false)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>

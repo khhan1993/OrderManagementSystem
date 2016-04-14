@@ -7,6 +7,7 @@ var auth = require('../controllers/auth');
 var group = require('../controllers/group');
 var menu = require('../controllers/menu');
 var order = require('../controllers/order');
+var statistics = require('../controllers/statistics');
 
 //로그인, 로그아웃 및 회원가입과 관련된 Routes.
 router.post('/auth/signup', auth.signup);
@@ -18,6 +19,7 @@ router.get('/group/info/:group_id', group.info);
 router.post('/group/join', group.join);
 router.post('/group/left', group.left);
 router.get('/group/list', group.list);
+router.get('/group/members', group.members);
 
 //메뉴와 관련된 Routes.
 router.post('/menu/create', menu.create);
@@ -28,6 +30,10 @@ router.get('/menu/list', menu.list);
 router.post('/order/request', order.request);
 router.post('/order/confirm/:order_id', order.confirm);
 router.get('/order/list', order.list);
+
+//통계와 관련된 Routes.
+router.get('/statistics/status', statistics.order_status);
+router.get('/statistics/queue', statistics.order_queue);
 
 //해당하는 API가 없을 경우 404 Response.
 router.all('*', function(req, res, next) {

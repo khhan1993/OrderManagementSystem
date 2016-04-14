@@ -1,1 +1,46 @@
-member
+<div class="row">
+    <div class="col-md-4 col-sm-4">
+        <div class="row">
+            <div class="col-md-12 col-sm-12">
+                <h3>멤버 정보</h3>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>이름</th>
+                            <th>추가된 시간</th>
+                            <th>삭제</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-ng-repeat="member in members">
+                            <td>{{member.id}}</td>
+                            <td>{{member.name}}</td>
+                            <td>{{get_time_text(member.created_at)}}</td>
+                            <td><a href="" data-ng-click="remove_exist_member()"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-md-12 col-sm-12">
+                <h3>멤버 추가</h3>
+                <form data-ng-submit="add_new_member()">
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" class="form-control" placeholder="이메일 입력" data-ng-model="user_email" data-ng-required="true">
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8 col-sm-8">
+
+    </div>
+</div>
