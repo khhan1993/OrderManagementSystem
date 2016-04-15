@@ -99,6 +99,10 @@ function create(req, res, next) {
                 data: null
             });
 
+            //Socket.IO를 이용하여 실시간으로 업데이트 할 수 있도록 설정함.
+            var io = require('./websocket');
+            io.socketEventEmitter('Group_' + group_id, 'menuEvent', null);
+
             return;
         }
     });
@@ -144,6 +148,9 @@ function update(req, res, next) {
         return;
     }
 
+    //SocketIO 사용으로 인해 추가.
+    var groupId = null;
+
     //메뉴 정보의 업데이트를 진행한다.
     //TODO: 멤버 전부 다 수정 가능하게 할지, 아니면 그룹 만든사람만 수정 가능하게 할지 생각해 볼 것!
     async.waterfall([
@@ -186,6 +193,7 @@ function update(req, res, next) {
                         return;
                     }
                     else {
+                        groupId = group_id;
                         callback(null);
                     }
                 }
@@ -219,6 +227,10 @@ function update(req, res, next) {
                 mesasge: "OK",
                 data: null
             });
+
+            //Socket.IO를 이용하여 실시간으로 업데이트 할 수 있도록 설정함.
+            var io = require('./websocket');
+            io.socketEventEmitter('Group_' + groupId, 'menuEvent', null);
 
             return;
         }

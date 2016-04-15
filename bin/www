@@ -36,6 +36,9 @@ httpsServer.listen(normalizePort(httpsPort));
 httpsServer.on('error', onErrorHttps);
 httpsServer.on('listening', onListeningHttps);
 
+exports.httpsServer = httpsServer;
+var io = require('../controllers/websocket');
+
 /**
  * Normalize a port into a number, string, or false.
  */
