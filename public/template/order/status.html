@@ -1,0 +1,38 @@
+<div class="row">
+    <h3>주문 현황</h3>
+    <div class="col-md-6 col-sm-6">
+        <div class="row">
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>주문자 이름</th>
+                        <th>내역</th>
+                        <th>총액(<i class="fa fa-krw"></i>)</th>
+                        <th>테이블 번호</th>
+                        <th>시간</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-ng-repeat="order in order_list">
+                        <td>{{order.id}}</td>
+                        <td>{{order.user_name}}</td>
+                        <td><a href="" data-ng-click="show_order_content(order.content)">내역 보기</a></td>
+                        <td>{{order.total_price}}</td>
+                        <td>{{order.table_num}}</td>
+                        <td>{{get_time_text(order.created_at)}}</td>
+                        <td>
+                            <i data-ng-show="(order.approve_status != 1 && order.approve_status != 0)" class="fa fa-spinner fa-pulse fa-fw margin-bottom" aria-hidden="true"></i>
+                            <i data-ng-show="(order.approve_status == 1)" class="fa fa-check" aria-hidden="true"></i>
+                            <i data-ng-show="(order.approve_status == 0)" class="fa fa-close" aria-hidden="true"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-6 col-sm-6">
+
+    </div>
+</div>
