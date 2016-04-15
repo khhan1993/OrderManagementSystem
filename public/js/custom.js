@@ -40,14 +40,15 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
             templateUrl: 'template/order/confirm.html',
             controller: 'orderConfirmController'
         })
+        .state('order.status', {
+            url: '/status',
+            templateUrl: 'template/order/status.html',
+            controller: 'orderStatusController'
+        })
         .state('statistics', {
             abstract: true,
             url: '/statistics',
             templateUrl: 'template/statistics/base.html'
-        })
-        .state('statistics.status', {
-            url: '/status',
-            templateUrl: 'template/statistics/status.html'
         })
         .state('statistics.queue', {
             url: '/queue',
@@ -129,9 +130,34 @@ OMS.controller('topNavbarController', function($rootScope, $scope, $http, $cooki
         if(!!$rootScope.get_group_info) {
             $rootScope.get_group_info();
         }
+        $rootScope.webSocket.emit('selectGroup', {
+            'selected_group': $rootScope.selected_group,
+            'access_token': (!$cookies.get('access_token')) ? null : $cookies.get('access_token')
+        });
     };
 
     $rootScope.get_group_list();
+
+    $rootScope.get_time_text = function(unixtime) {
+        var reg_date = new Date(unixtime * 1000);
+        return reg_date.getFullYear() + "년 " + reg_date.getMonth() + "월 " + reg_date.getDate() + "일 " + reg_date.getHours() + "시 " + reg_date.getMinutes() + "분";
+    };
+
+    $rootScope.webSocket = io();
+    if($rootScope.selected_group != null) {
+        $rootScope.webSocket.emit('selectGroup', {
+            'selected_group': $rootScope.selected_group,
+            'access_token': (!$cookies.get('access_token')) ? null : $cookies.get('access_token')
+        });
+    }
+    
+    $rootScope.webSocket.on('disconnect', function() {
+        alert('서버와의 연결이 끊어졌습니다! 새로고침을 해 주세요.');
+    });
+    
+    $rootScope.webSocket.on('error', function(msg) {
+        alert(msg);
+    });
 });
 
 OMS.controller('loginController', function($rootScope, $scope, $http, $cookies, $state) {
@@ -320,6 +346,12 @@ OMS.controller('orderRequestController', function($rootScope, $scope, $http, $st
     $scope.table_num = null;
     
     $scope.get_menu_list();
+
+    $rootScope.webSocket.on('menuEvent', function(data) {
+        if($state.is('order.request')) {
+            $scope.get_menu_list();
+        }
+    });
 });
 
 OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $state, $cookies) {
@@ -360,10 +392,6 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $st
                 alert(response.data.message);
             });
         }
-        else {
-
-        }
-
     };
     
     $scope.show_order_content = function(content) {
@@ -375,6 +403,49 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $st
     };
 
     $scope.get_pending_list();
+
+    $rootScope.webSocket.on('orderEvent', function(data) {
+        if($state.is('order.confirm')) {
+            $scope.get_pending_list();
+        }
+    });
+});
+
+OMS.controller('orderStatusController', function($rootScope, $scope, $http, $state, $cookies) {
+    $scope.get_order_list = function() {
+        $http({
+            method: 'GET',
+            url: '/api/order/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            $scope.order_list = response.data.data;
+            $scope.current_unixtime = parseInt((new Date()).getTime() / 1000);
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.get_elapsed_time_text = function(seconds) {
+        return parseInt(seconds / 60) + "분 " + parseInt(seconds % 60) + "초";
+    };
+
+    $scope.show_order_content = function(content) {
+        var content_text = "";
+        for(var i in content) {
+            content_text += content[i].name + " " + content[i].count + "개\n";
+        }
+        alert(content_text);
+    };
+
+    $scope.get_order_list();
+
+    $rootScope.webSocket.on('orderEvent', function(data) {
+        if($state.is('order.status')) {
+            $scope.get_order_list();
+        }
+    });
 });
 
 OMS.controller('memberManageController', function($rootScope, $scope, $http, $state, $cookies) {
@@ -417,11 +488,6 @@ OMS.controller('memberManageController', function($rootScope, $scope, $http, $st
         alert('아직 지원하지 않는 기능입니다.');
     };
 
-    $scope.get_time_text = function(unixtime) {
-        var reg_date = new Date(unixtime * 1000);
-        return reg_date.getFullYear() + "년 " + reg_date.getMonth() + "월 " + reg_date.getDate() + "일 " + reg_date.getHours() + "시 " + reg_date.getMinutes() + "분";
-    };
-    
     $scope.user_email = null;
 
     $scope.get_member_list();

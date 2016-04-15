@@ -23,6 +23,12 @@ var api = require('./routes/api');
 var app = express();
 
 // uncomment after placing your favicon in /public
+app.use(function(req, res, next) {
+  if (!req.secure) {
+    return res.redirect('https://' + req.headers.host + req.url);
+  }
+  next();
+});
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());

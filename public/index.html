@@ -49,12 +49,12 @@
                         <ul class="dropdown-menu">
                             <li data-ui-sref-active="active"><a data-ui-sref="order.request">주문 입력</a></li>
                             <li data-ui-sref-active="active"><a data-ui-sref="order.confirm">주문 처리</a></li>
+                            <li data-ui-sref-active="active"><a data-ui-sref="order.status">주문 현황</a></li>
                         </ul>
                     </li>
                     <li class="dropdown" data-ng-show="is_access_token_set && (selected_group != null)" data-ui-sref-active="active">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">통계 <span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li data-ui-sref-active="active"><a data-ui-sref="statistics.status">주문 현황</a></li>
                             <li data-ui-sref-active="active"><a data-ui-sref="statistics.queue">메뉴별 대기열</a></li>
                         </ul>
                     </li>
@@ -79,6 +79,7 @@
 
     <!-- Vendor JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-route.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-cookies.min.js"></script>

@@ -188,6 +188,10 @@ function request(req, res, next) {
                 }
             });
 
+            //Socket.IO를 이용하여 실시간으로 업데이트 할 수 있도록 설정함.
+            var io = require('./websocket');
+            io.socketEventEmitter('Group_' + group_id, 'orderEvent', null);
+
             return;
         }
     });
@@ -231,13 +235,16 @@ function confirm(req, res, next) {
         return;
     }
 
+    //SocketIO 사용 때문에 추가.
+    var groupId = null;
+
     //Approve여부에 따라 처리방식이 달라진다.
     if(parseInt(is_approve) == 1) {
         //주문 승인
         async.waterfall([
             //해당 주문에 해당하는 그룹에 이 유저가 속해있는지를 확인한다.
             function(callback) {
-                var queryStr = "SELECT COUNT(*) AS `check_count` FROM `orders` JOIN `members` ON ";
+                var queryStr = "SELECT `orders`.* FROM `orders` JOIN `members` ON ";
                 queryStr += "`members`.`user_id` = ? AND ";
                 queryStr += "`members`.`group_id` = `orders`.`group_id` AND ";
                 queryStr += "`orders`.`id` = ?";
@@ -247,7 +254,7 @@ function confirm(req, res, next) {
                         callback(err);
                     }
                     else {
-                        if(rows[0].check_count == 0) {
+                        if(rows.length == 0) {
                             let custom_err = new Error('Only member of related group can approve this order!');
                             custom_err.status = 403;
                             next(custom_err);
@@ -255,6 +262,7 @@ function confirm(req, res, next) {
                             return;
                         }
                         else {
+                            groupId = rows[0].group_id;
                             callback(null);
                         }
                     }
@@ -340,6 +348,11 @@ function confirm(req, res, next) {
                     data: null
                 });
 
+                //Socket.IO를 이용하여 실시간으로 업데이트 할 수 있도록 설정함.
+                var io = require('./websocket');
+                io.socketEventEmitter('Group_' + groupId, 'orderEvent', null);
+                io.socketEventEmitter('Group_' + groupId, 'queueEvent', null);
+
                 return;
             }
         });
@@ -349,7 +362,7 @@ function confirm(req, res, next) {
         async.waterfall([
             //해당 주문에 해당하는 그룹에 이 유저가 속해있는지를 확인한다.
             function(callback) {
-                var queryStr = "SELECT COUNT(*) AS `check_count` FROM `orders` JOIN `members` ON ";
+                var queryStr = "SELECT `orders`.* FROM `orders` JOIN `members` ON ";
                 queryStr += "`members`.`user_id` = ? AND ";
                 queryStr += "`members`.`group_id` = `orders`.`group_id` AND ";
                 queryStr += "`orders`.`id` = ?";
@@ -359,7 +372,7 @@ function confirm(req, res, next) {
                         callback(err);
                     }
                     else {
-                        if(rows[0].check_count == 0) {
+                        if(rows.length == 0) {
                             let custom_err = new Error('Only member of related group can approve this order!');
                             custom_err.status = 403;
                             next(custom_err);
@@ -367,6 +380,7 @@ function confirm(req, res, next) {
                             return;
                         }
                         else {
+                            groupId = rows[0].group_id;
                             callback(null);
                         }
                     }
@@ -409,6 +423,10 @@ function confirm(req, res, next) {
                     mesasge: "OK",
                     data: null
                 });
+
+                //Socket.IO를 이용하여 실시간으로 업데이트 할 수 있도록 설정함.
+                var io = require('./websocket');
+                io.socketEventEmitter('Group_' + groupId, 'orderEvent', null);
 
                 return;
             }

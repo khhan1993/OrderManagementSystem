@@ -4,15 +4,15 @@
         <div class="row">
             <table class="table table-hover table-bordered">
                 <thead>
-                <tr>
-                    <th>#</th>
-                    <th>주문자 이름</th>
-                    <th>내역</th>
-                    <th>총액(<i class="fa fa-krw"></i>)</th>
-                    <th>테이블 번호</th>
-                    <th>시간</th>
-                    <th>처리</th>
-                </tr>
+                    <tr>
+                        <th>#</th>
+                        <th>주문자 이름</th>
+                        <th>내역</th>
+                        <th>총액(<i class="fa fa-krw"></i>)</th>
+                        <th>테이블 번호</th>
+                        <th>시간</th>
+                        <th>처리</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <tr data-ng-repeat="pending in pending_list">
@@ -21,10 +21,10 @@
                         <td><a href="" data-ng-click="show_order_content(pending.content)">내역 보기</a></td>
                         <td>{{pending.total_price}}</td>
                         <td>{{pending.table_num}}</td>
-                        <td>{{get_elapsed_time_text(current_unixtime - pending.created_at)}} 전</td>
+                        <td>{{get_time_text(pending.created_at)}}</td>
                         <td>
                             <a href="" data-ng-click="update_pending_data(pending.id, true)"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>
-                            <a href=""  data-ng-click="update_pending_data(pending.id, false)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
+                            <a href="" data-ng-click="update_pending_data(pending.id, false)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
                         </td>
                     </tr>
                 </tbody>
