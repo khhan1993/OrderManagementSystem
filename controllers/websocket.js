@@ -5,6 +5,10 @@ var async = require('async');
 var app = require('../app');
 var io = require('socket.io')(require('../bin/www').httpsServer);
 
+//분산처리 시 데이터 공유를 위해 추가.
+var io_redis = require('socket.io-redis');
+io.adapter(io_redis({ host: 'localhost', port: 6379 })); //접속 정보는 자신의 상황에 맞게 설정할 것!
+
 io.on('connection', function (socket) {
 
     socket.on('selectGroup', function(data) {
