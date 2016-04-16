@@ -52,7 +52,8 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
         })
         .state('statistics.queue', {
             url: '/queue',
-            templateUrl: 'template/statistics/queue.html'
+            templateUrl: 'template/statistics/queue.html',
+            controller: 'queueStatisticsController'
         })
         .state('manage', {
             abstract: true,
@@ -421,6 +422,7 @@ OMS.controller('orderStatusController', function($rootScope, $scope, $http, $sta
             }
         }).then(function successCallback(response) {
             $scope.order_list = response.data.data;
+            $scope.order_list.sort(function(a, b) { return b.id - a.id});
             $scope.current_unixtime = parseInt((new Date()).getTime() / 1000);
         }, function errorCallback(response) {
             alert(response.data.message);
@@ -444,6 +446,78 @@ OMS.controller('orderStatusController', function($rootScope, $scope, $http, $sta
     $rootScope.webSocket.on('orderEvent', function(data) {
         if($state.is('order.status')) {
             $scope.get_order_list();
+        }
+    });
+});
+
+OMS.controller('queueStatisticsController', function($rootScope, $scope, $http, $state, $cookies) {
+
+    $scope.get_queue_information = function() {
+        $http({
+            method: 'GET',
+            url: '/api/statistics/queue?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            var order_price_list = response.data.data.order_price_list;
+            var waitings = response.data.data.waitings;
+
+            $scope.total_sales = 0;
+            for(var i in order_price_list) {
+                $scope.total_sales += order_price_list[i].total_price;
+            }
+
+            $scope.menu_list = response.data.data.menu_list;
+            for(var i in $scope.menu_list) {
+                $scope.menu_list[i].total_sale_count = 0;
+                $scope.menu_list[i].current_waiting_count = 0;
+                $scope.menu_list[i].queue = [];
+            }
+
+            for(var i in waitings) {
+                for(var j in $scope.menu_list) {
+                    if($scope.menu_list[j].id == waitings[i].menu_id) {
+                        $scope.menu_list[j].total_sale_count += waitings[i].amount;
+                        if(waitings[i].is_served == 0) {
+                            $scope.menu_list[j].current_waiting_count += waitings[i].amount;
+                            $scope.menu_list[j].queue.push({
+                                id: waitings[i].id,
+                                content: "T" + waitings[i].table_num + " / " + waitings[i].amount + "개"
+                            });
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+    
+    $scope.update_waiting_status = function(menu_data, waiting_data) {
+        var confirm_check_message = "[" + menu_data.name + "] 메뉴 대기열에서 [" + waiting_data.content + "]를 제거하시겠습니까?";
+        if(confirm(confirm_check_message)) {
+            $http({
+                method: 'POST',
+                url: '/api/statistics/clear_waiting/' + waiting_data.id,
+                headers: {
+                    Authorization: $cookies.get('access_token')
+                }
+            }).then(function successCallback(response) {
+                //Socket Event로 새로고침하기 때문에 여기서 따로 할 것은 없다.
+            }, function errorCallback(response) {
+                alert(response.data.message);
+            });
+        }
+    };
+
+    $scope.get_queue_information();
+
+    $rootScope.webSocket.on('queueEvent', function(data) {
+        if($state.is('statistics.queue')) {
+            $scope.get_queue_information();
         }
     });
 });

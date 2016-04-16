@@ -6,7 +6,6 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>#</th>
                             <th>이름</th>
                             <th>가격(<i class="fa fa-krw"></i>)</th>
                             <th>활성</th>
@@ -14,7 +13,6 @@
                     </thead>
                     <tbody>
                         <tr data-ng-repeat="menu in menus">
-                            <td>{{menu.id}}</td>
                             <td>{{menu.name}}</td>
                             <td><input class="custom-input" type="text" data-ng-value="menu.price" data-ng-model="menu.price" data-ng-blur="update_menu_price(menu, menu.is_available)"></td>
                             <td>
