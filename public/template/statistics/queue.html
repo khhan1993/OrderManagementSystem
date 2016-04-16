@@ -1,5 +1,12 @@
 <div class="row">
     <div class="col-md-4 col-sm-4">
+        <h3>총 매출액 (<i class="fa fa-krw"></i>)</h3>
+        <div class="row">
+            <div class="col-md-12 col-sm-12">
+                <button type="button" class="btn btn-default btn-lg btn-block">{{total_sales | number}}</button>
+            </div>
+        </div>
+
         <h3>메뉴별 대기 수량</h3>
         <div class="row">
             <div class="col-md-12 col-sm-12">
@@ -13,7 +20,12 @@
                         </tr>
                     </thead>
                     <tbody>
-
+                        <tr data-ng-repeat="menu in menu_list">
+                            <td>{{menu.id}}</td>
+                            <td>{{menu.name}}</td>
+                            <td>{{menu.total_sale_count}}</td>
+                            <td>{{menu.current_waiting_count}}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -28,11 +40,19 @@
                         <tr>
                             <th>#</th>
                             <th>메뉴명</th>
-                            <th></th>
+                            <th>대기열</th>
                         </tr>
                     </thead>
                     <tbody>
-
+                        <tr data-ng-repeat="menu in menu_list">
+                            <td>{{menu.id}}</td>
+                            <td>{{menu.name}}</td>
+                            <td>
+                                <span data-ng-repeat="data in menu.queue">
+                                    <button type="button" class="btn btn-default btn-xs" data-ng-click="update_waiting_status(menu, data)">{{data.content}}</button>
+                                </span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
