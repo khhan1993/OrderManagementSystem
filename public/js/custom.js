@@ -395,10 +395,15 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $st
         }
     };
     
-    $scope.show_order_content = function(content) {
-        var content_text = "";
-        for(var i in content) {
-            content_text += content[i].name + " " + content[i].count + "개\n";
+    $scope.show_order_content = function(data) {
+        var content_text = "주문번호: " + data.id + "\n";
+        content_text += "주문자명: " + data.user_name + "\n";
+        content_text += "주문 총액: " + data.total_price + "\n";
+        content_text += "테이블 번호: " + data.table_num + "\n";
+        content_text += "주문 시간: " + $rootScope.get_time_text(data.created_at) + "\n";
+        content_text += "\n[주문 내역]\n";
+        for(var i in data.content) {
+            content_text += data.content[i].name + " " + data.content[i].count + "개\n";
         }
         alert(content_text);
     };
@@ -433,10 +438,15 @@ OMS.controller('orderStatusController', function($rootScope, $scope, $http, $sta
         return parseInt(seconds / 60) + "분 " + parseInt(seconds % 60) + "초";
     };
 
-    $scope.show_order_content = function(content) {
-        var content_text = "";
-        for(var i in content) {
-            content_text += content[i].name + " " + content[i].count + "개\n";
+    $scope.show_order_content = function(data) {
+        var content_text = "주문번호: " + data.id + "\n";
+        content_text += "주문자명: " + data.user_name + "\n";
+        content_text += "주문 총액: " + data.total_price + "\n";
+        content_text += "테이블 번호: " + data.table_num + "\n";
+        content_text += "주문 시간: " + $rootScope.get_time_text(data.created_at) + "\n";
+        content_text += "\n[주문 내역]\n";
+        for(var i in data.content) {
+            content_text += data.content[i].name + " " + data.content[i].count + "개\n";
         }
         alert(content_text);
     };
