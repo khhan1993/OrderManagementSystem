@@ -1,9 +1,11 @@
 'use strict';
 
-var OMS = angular.module('OMS', ['ui.router', 'ngRoute', 'ngCookies']);
+var OMS = angular.module('OMS', ['ui.router', 'ngCookies']);
 
 OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
+
     $urlRouterProvider.otherwise("/");
+    $locationProvider.html5Mode(true);
 
     $stateProvider
         .state('home', {
@@ -85,8 +87,6 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
             templateUrl: 'template/auth/register.html',
             controller: 'registerController'
         });
-
-    //$locationProvider.html5mode(true);
 });
 
 OMS.controller('topNavbarController', function($rootScope, $scope, $http, $cookies, $state) {
