@@ -1,0 +1,79 @@
+<section class="page-header page-header-light page-header-more-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>메뉴 관리 <span>기존 메뉴 정보를 수정하거나 새 메뉴를 추가할 수 있습니다.</span></h1>
+                <ul class="breadcrumb breadcrumb-valign-mid">
+                    <li>manage</li>
+                    <li>menu</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h4>메뉴 목록</h4>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>가격(<i class="fa fa-krw"></i>)</th>
+                        <th>활성</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="menu in menu_list">
+                        <td>{{menu.name}}</td>
+                        <td><input class="custom-input" type="text" ng-value="menu.price" ng-model="menu.price" ng-blur="updateMenu(menu, menu.is_available)"></td>
+                        <td>
+                            <a href="" ng-click="updateMenu(menu, 0)"><span class="glyphicon glyphicon-ok" aria-hidden="true" ng-show="(menu.is_available == 1)"></span></a>
+                            <a href="" ng-click="updateMenu(menu, 1)"><span class="glyphicon glyphicon-remove" aria-hidden="true" ng-show="(menu.is_available == 0)"></span></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-6">
+            <div class="featured-boxes">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="featured-box featured-box-primary align-left mt-xlg">
+                            <div class="box-content">
+                                <h4 class="heading-primary text-uppercase mb-md">메뉴 추가</h4>
+                                <form ng-submit="addMenu()">
+                                    <div class="row">
+                                        <div class="form-group">
+                                            <div class="col-md-12">
+                                                <label>이름</label>
+                                                <input type="text" ng-model="new_menu_name" class="form-control input-lg">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-group">
+                                            <div class="col-md-12">
+                                                <label>가격</label>
+                                                <input type="number" ng-model="new_menu_price" class="form-control input-lg">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6"></div>
+                                        <div class="col-md-6">
+                                            <input type="submit" value="추가하기" class="btn btn-primary pull-right mb-xl">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

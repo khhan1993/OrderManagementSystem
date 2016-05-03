@@ -1,0 +1,70 @@
+<section class="page-header page-header-light page-header-more-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>멤버 관리 <span>그룹에 새 유저를 추가하거나 기존 유저를 관리할 수 있습니다.</span></h1>
+                <ul class="breadcrumb breadcrumb-valign-mid">
+                    <li>manage</li>
+                    <li>member</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h4>멤버 목록</h4>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>회원 번호</th>
+                        <th>이름</th>
+                        <th>가입 일자</th>
+                        <th>삭제</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="member in member_list">
+                        <td>{{member.id}}</td>
+                        <td>{{member.name}}</td>
+                        <td>{{getDateTimeText(member.createdAt)}}</td>
+                        <td><a href="" data-ng-click="remove_exist_member(member.id)"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-6">
+            <div class="featured-boxes">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="featured-box featured-box-primary align-left mt-xlg">
+                            <div class="box-content">
+                                <h4 class="heading-primary text-uppercase mb-md">멤버 추가</h4>
+                                <form ng-submit="addMember()">
+                                    <div class="row">
+                                        <div class="form-group">
+                                            <div class="col-md-12">
+                                                <label>이메일</label>
+                                                <input type="email" ng-model="email" class="form-control input-lg">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6"></div>
+                                        <div class="col-md-6">
+                                            <input type="submit" value="추가하기" class="btn btn-primary pull-right mb-xl">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

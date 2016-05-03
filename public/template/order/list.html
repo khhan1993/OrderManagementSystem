@@ -1,0 +1,84 @@
+<section class="page-header page-header-light page-header-more-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>주문 현황 <button type="button" ng-click="getOrderList()" class="btn btn-warning btn-xs mr-xs mb-sm">수동 새로고침</button> <span>요청된 주문 리스트를 볼 수 있습니다.</span></h1>
+                <ul class="breadcrumb breadcrumb-valign-mid">
+                    <li>order</li>
+                    <li>list</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1 text-center">
+            <form class="form-inline">
+                <div class="checkbox">
+                    <label>
+                        <input ng-model="show_only_my_request" ng-click="getOrderList()" type="checkbox"> 내 주문 내역만 보기
+                    </label>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>주문번호</th>
+                        <th>주문자 이름</th>
+                        <th>내역</th>
+                        <th class="hidden-xs">총 가격(<i class="fa fa-krw"></i>)</th>
+                        <th class="hidden-xs">테이블 번호</th>
+                        <th class="hidden-xs">시간</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="order in order_list">
+                        <td>{{order.id}}</td>
+                        <td>{{order.user_name}}</td>
+                        <td><button type="button" class="btn btn-default btn-xs" ng-click="show_order_content(order)">보기</button></td>
+                        <td class="hidden-xs">{{order.total_price}}</td>
+                        <td class="hidden-xs">{{order.table_num}}</td>
+                        <td class="hidden-xs">{{getDateTimeText(order.createdAt)}}</td>
+                        <td>
+                            <i ng-show="(order.approve_status != 1 && order.approve_status != 0)" class="fa fa-spinner fa-pulse fa-fw margin-bottom" aria-hidden="true"></i>
+                            <i ng-show="(order.approve_status == 1)" class="fa fa-check" aria-hidden="true"></i>
+                            <i ng-show="(order.approve_status == 0)" class="fa fa-close" aria-hidden="true"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="text-center">
+                <ul class="pagination">
+                    <li ng-class="(pagination_info.prev_active) ? '' : 'disabled'">
+                        <a href="" ng-click="gotoPrevPage()" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li ng-repeat="page in pagination_info.pagination_num_list" ng-class="(pagination_info.current_page == page) ? 'active' : ''">
+                        <a href="" ng-click="gotoSpecificPage(page)">{{page}}</a>
+                    </li>
+                    <li ng-class="(pagination_info.next_active) ? '' : 'disabled'">
+                        <a href="" ng-click="gotoNextPage()" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

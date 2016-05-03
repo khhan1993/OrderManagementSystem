@@ -1,0 +1,8 @@
+/* Add here all your CSS customizations */
+.custom-input {
+    height: 100%;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
