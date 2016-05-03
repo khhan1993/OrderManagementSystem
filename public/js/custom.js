@@ -1,16 +1,29 @@
-'use strict';
-
-var OMS = angular.module('OMS', ['ui.router', 'ngCookies']);
+var OMS = angular.module('OMS', ['ui.router', 'ngRoute', 'ngCookies']);
 
 OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
 
     $urlRouterProvider.otherwise("/");
-    $locationProvider.html5Mode(true);
+    //$locationProvider.html5Mode(true);
 
     $stateProvider
         .state('home', {
             url: '/',
             templateUrl: 'template/home.html'
+        })
+        .state('auth', {
+            abstract: true,
+            url: '/auth',
+            templateUrl: 'template/auth/base.html'
+        })
+        .state('auth.signup', {
+            url: '/signup',
+            templateUrl: 'template/auth/signup.html',
+            controller: 'signupController'
+        })
+        .state('auth.signin', {
+            url: '/signin',
+            templateUrl: 'template/auth/signin.html',
+            controller: 'signinController'
         })
         .state('group', {
             abstract: true,
@@ -22,10 +35,15 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
             templateUrl: 'template/group/create.html',
             controller: 'createGroupController'
         })
-        .state('group.current', {
-            url: '/current',
-            templateUrl: 'template/group/current.html',
-            controller: 'currentGroupController'
+        .state('group.info', {
+            url: '/info',
+            templateUrl: 'template/group/info.html',
+            controller: 'getCurrentGroupInfoController'
+        })
+        .state('group.list', {
+            url: '/list',
+            templateUrl: 'template/group/list.html',
+            controller: 'getEnrolledGroupListController'
         })
         .state('order', {
             abstract: true,
@@ -33,7 +51,7 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
             templateUrl: 'template/order/base.html'
         })
         .state('order.request', {
-            url: '/request',
+            url: '/create',
             templateUrl: 'template/order/request.html',
             controller: 'orderRequestController'
         })
@@ -42,127 +60,91 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
             templateUrl: 'template/order/confirm.html',
             controller: 'orderConfirmController'
         })
-        .state('order.status', {
-            url: '/status',
-            templateUrl: 'template/order/status.html',
-            controller: 'orderStatusController'
+        .state('order.list', {
+            url: '/list',
+            templateUrl: 'template/order/list.html',
+            controller: 'orderListController'
         })
         .state('statistics', {
             abstract: true,
             url: '/statistics',
             templateUrl: 'template/statistics/base.html'
         })
-        .state('statistics.queue', {
-            url: '/queue',
-            templateUrl: 'template/statistics/queue.html',
-            controller: 'queueStatisticsController'
+        .state('statistics.waiting', {
+            url: '/waiting',
+            templateUrl: 'template/statistics/waiting.html',
+            controller: 'statisticsWaitingController'
         })
         .state('manage', {
             abstract: true,
             url: '/manage',
             templateUrl: 'template/manage/base.html'
         })
-        .state('manage.member', {
-            url: '/member',
-            templateUrl: 'template/manage/member.html',
-            controller: 'memberManageController'
-        })
         .state('manage.menu', {
             url: '/menu',
             templateUrl: 'template/manage/menu.html',
-            controller: 'menuManageController'
+            controller: 'manageMenuController'
         })
-        .state('auth', {
-            abstract: true,
-            url: '/auth',
-            templateUrl: 'template/auth/base.html'
-        })
-        .state('auth.login', {
-            url: '/login',
-            templateUrl: 'template/auth/login.html',
-            controller: 'loginController'
-        })
-        .state('auth.register', {
-            url: '/register',
-            templateUrl: 'template/auth/register.html',
-            controller: 'registerController'
+        .state('manage.member', {
+            url: '/member',
+            templateUrl: 'template/manage/member.html',
+            controller: 'manageMemberController'
         });
 });
 
-OMS.controller('topNavbarController', function($rootScope, $scope, $http, $cookies, $state) {
-    $scope.logout = function() {
-        $cookies.remove('access_token');
-        $cookies.remove('selected_group');
-        $state.go('home');
-        $rootScope.is_access_token_set = !!$cookies.get('access_token');
-        while($rootScope.group_list.length > 0) {
-            $rootScope.group_list.pop();
+OMS.controller('navbarController', function($rootScope, $scope, $http, $cookies, $state, $interval) {
+
+    //로그인 상태를 감지하고 실시간으로 반영하기 위한 것이다.
+    var authStateTrack = $interval(function() {
+        $rootScope.is_authenticated = (!!$cookies.get('access_token'));
+        $rootScope.is_group_selected = (!!$cookies.get('selected_group'));
+        if($rootScope.is_authenticated) {
+            $rootScope.decoded_token = JSON.parse(atob(($cookies.get('access_token')).split('.')[1]));
         }
-        $rootScope.selected_group = null;
-    };
+        else {
+            $rootScope.decoded_token = null;
 
-    $rootScope.is_access_token_set = !!$cookies.get('access_token');
-    $rootScope.group_list = [];
-    $rootScope.get_group_list = function() {
-        if(!!$cookies.get('access_token')) {
-            $http({
-                method: 'GET',
-                url: '/api/group/list',
-                headers: {
-                    Authorization: $cookies.get('access_token')
-                }
-            }).then(function successCallback(response) {
-                while($rootScope.group_list.length > 0) {
-                    $rootScope.group_list.pop();
-                }
+            if(!$state.is('home') && !$state.is('auth.signin') && !$state.is('auth.signup')) {
+                $state.go('home');
+            }
+        }
+    }, 250);
 
-                $rootScope.group_list = response.data.data;
-            }, function errorCallback(response) {
-                alert(response.data.message);
-            });
+    $scope.signout = function() {
+
+        if(confirm('로그아웃 하시겠습니까?')) {
+            if($cookies.get('access_token')) {
+                $cookies.remove('access_token');
+            }
+
+            if($cookies.get('selected_group')) {
+                $cookies.remove('selected_group');
+            }
+
+            $state.go('home');
+            $rootScope.is_authenticated = (!!$cookies.get('access_token'));
         }
     };
 
-    $rootScope.selected_group = (!$cookies.get('selected_group')) ? null : $cookies.get('selected_group');
-    $rootScope.select_group = function(group_id) {
-        $rootScope.selected_group = group_id;
-        $cookies.put('selected_group', group_id);
-        $state.go('group.current');
-        if(!!$rootScope.get_group_info) {
-            $rootScope.get_group_info();
-        }
-        $rootScope.webSocket.emit('selectGroup', {
-            'selected_group': $rootScope.selected_group,
-            'access_token': (!$cookies.get('access_token')) ? null : $cookies.get('access_token')
-        });
+    $rootScope.scope_parseInt = function(numeric_val) {
+        return parseInt(numeric_val);
     };
 
-    $rootScope.get_group_list();
+    $rootScope.getDateTimeText = function(dateObj) {
+        var target_date = new Date(dateObj);
 
-    $rootScope.get_time_text = function(unixtime) {
-        var reg_date = new Date(unixtime * 1000);
-        return reg_date.getFullYear() + "년 " + reg_date.getMonth() + "월 " + reg_date.getDate() + "일 " + reg_date.getHours() + "시 " + reg_date.getMinutes() + "분";
+        var year = target_date.getFullYear();
+        var month = target_date.getMonth() + 1;
+        var date = target_date.getDate();
+        var hour = target_date.getHours();
+        var minute = target_date.getMinutes();
+
+        return year + "년 " + month + "월 " + date + "일 " + hour + "시 " + minute + "분";
     };
-
-    $rootScope.webSocket = io();
-    if($rootScope.selected_group != null) {
-        $rootScope.webSocket.emit('selectGroup', {
-            'selected_group': $rootScope.selected_group,
-            'access_token': (!$cookies.get('access_token')) ? null : $cookies.get('access_token')
-        });
-    }
-    
-    $rootScope.webSocket.on('disconnect', function() {
-        alert('서버와의 연결이 끊어졌습니다! 새로고침을 해 주세요.');
-    });
-    
-    $rootScope.webSocket.on('error', function(msg) {
-        alert(msg);
-    });
 });
 
-OMS.controller('loginController', function($rootScope, $scope, $http, $cookies, $state) {
-    $scope.login = function() {
+OMS.controller('signinController', function($rootScope, $scope, $http, $cookies, $state) {
+    $scope.signin = function() {
         $http({
             method: 'POST',
             url: '/api/auth/signin',
@@ -176,22 +158,16 @@ OMS.controller('loginController', function($rootScope, $scope, $http, $cookies, 
             $cookies.put('access_token', response.data.data, {
                 expires: validDate
             });
-            alert('Login success!');
             $state.go('home');
-            $rootScope.is_access_token_set = !!$cookies.get('access_token');
-
-            $rootScope.get_group_list();
+            $rootScope.is_authenticated = !!$cookies.get('access_token');
         }, function errorCallback(response) {
             alert(response.data.message);
         });
-    };
-    
-    $scope.email = null;
-    $scope.password = null;
+    }
 });
 
-OMS.controller('registerController', function($scope, $http, $state) {
-    $scope.register = function() {
+OMS.controller('signupController', function($scope, $http) {
+    $scope.signup = function() {
         $http({
             method: 'POST',
             url: '/api/auth/signup',
@@ -201,20 +177,18 @@ OMS.controller('registerController', function($scope, $http, $state) {
                 password: $scope.password
             }
         }).then(function successCallback(response) {
-            alert('Register complete!');
-            $state.go('home');
+            alert('회원가입이 완료되었습니다.');
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-
-    $scope.name = null;
-    $scope.email = null;
-    $scope.password = null;
 });
 
-OMS.controller('createGroupController', function($rootScope, $scope, $http, $state, $cookies) {
-    $scope.create = function() {
+OMS.controller('createGroupController', function($scope, $http, $cookies, $state) {
+
+    $scope.group_name = null;
+
+    $scope.create_group = function() {
         $http({
             method: 'POST',
             url: '/api/group/create',
@@ -222,72 +196,63 @@ OMS.controller('createGroupController', function($rootScope, $scope, $http, $sta
                 Authorization: $cookies.get('access_token')
             },
             data: {
-                name: $scope.name
+                name: $scope.group_name
             }
         }).then(function successCallback(response) {
-            alert('Requested group is successfully created!');
-            $rootScope.get_group_list();
-            $state.go('home');
+            alert('그룹이 생성되었습니다!');
+            $state.go('group.list');
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-
-    $scope.name = null;
 });
 
-OMS.controller('currentGroupController', function($rootScope, $scope, $http, $state, $cookies, $interval) {
+OMS.controller('getCurrentGroupInfoController', function($scope, $http, $cookies) {
 
-    var user_info = null;
-    var group_info = null;
-
-    $rootScope.get_group_info = function() {
-        $http({
-            method: 'GET',
-            url: '/api/group/info/' + $cookies.get('selected_group'),
-            headers: {
-                Authorization: $cookies.get('access_token')
-            }
-        }).then(function successCallback(response) {
-            user_info = response.data.data.user_info;
-
-            $scope.user_uid = user_info.uid;
-            $scope.user_name = (user_info.name);
-            $scope.user_email = user_info.email;
-            $scope.user_ip_address = user_info.ip_address;
-
-            group_info = response.data.data.group_info;
-            var group_creation_dateObj = new Date(group_info.created_at * 1000);
-
-            $scope.group_id = group_info.id;
-            $scope.group_name = group_info.group_name;
-            $scope.group_creator = group_info.creator_name;
-            $scope.group_creation_date = group_creation_dateObj.getFullYear() + "년 " + group_creation_dateObj.getMonth() + "월 " + group_creation_dateObj.getDate() + "일 " + group_creation_dateObj.getHours() + "시 " + group_creation_dateObj.getMinutes() + "분";
-            $scope.num_of_group_members = response.data.data.num_of_group_members;
-
-        }, function errorCallback(response) {
-            alert(response.data.message);
-        });
-    };
-
-    $rootScope.get_group_info();
-
-    var token_valid_timer = $interval(function() {
-        var remain_unixtime = parseInt(user_info.exp - ((new Date()).getTime() / 1000));
-
-        var hours = parseInt(remain_unixtime / 3600);
-        var minutes = parseInt((remain_unixtime % 3600) / 60);
-        var seconds = parseInt(remain_unixtime % 60);
-
-        $scope.user_exp = hours + "시간 " + minutes + "분 " + seconds + "초";
-        if(remain_unixtime <= 0 || !$cookies.get('access_token') || !$cookies.get('selected_group')) {
-            $interval.cancel(token_valid_timer);
+    $http({
+        method: 'GET',
+        url: '/api/group/info/' + $cookies.get('selected_group'),
+        headers: {
+            Authorization: $cookies.get('access_token')
         }
-    }, 1000);
+    }).then(function successCallback(response) {
+        $scope.group_info = response.data.data;
+    }, function errorCallback(response) {
+        alert(response.data.message);
+    });
+    
 });
 
-OMS.controller('orderRequestController', function($rootScope, $scope, $http, $state, $cookies) {
-    $scope.get_menu_list = function() {
+OMS.controller('getEnrolledGroupListController', function($scope, $http, $cookies) {
+
+    $http({
+        method: 'GET',
+        url: '/api/group/list',
+        headers: {
+            Authorization: $cookies.get('access_token')
+        }
+    }).then(function successCallback(response) {
+        $scope.group_list = response.data.data;
+    }, function errorCallback(response) {
+        alert(response.data.message);
+    });
+    
+    $scope.selected_group = $cookies.get('selected_group');
+
+    $scope.select_group = function(group_id) {
+        var validDate = new Date();
+        validDate.setHours(validDate.getHours() + 12);
+        $cookies.put('selected_group', group_id, {
+            expires: validDate
+        });
+
+        $scope.selected_group = $cookies.get('selected_group');
+    };
+});
+
+OMS.controller('orderRequestController', function($scope, $http, $cookies) {
+
+    $scope.getMenuList = function() {
         $http({
             method: 'GET',
             url: '/api/menu/list?group_id=' + $cookies.get('selected_group'),
@@ -295,33 +260,39 @@ OMS.controller('orderRequestController', function($rootScope, $scope, $http, $st
                 Authorization: $cookies.get('access_token')
             }
         }).then(function successCallback(response) {
-            $scope.menus = response.data.data;
+            var menu_list_for_convert = response.data.data;
+            for(var i in menu_list_for_convert) {
+                menu_list_for_convert[i].count = 0;
+            }
+            $scope.menu_list = menu_list_for_convert;
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-    
-    $scope.menu_count_plus = function(menu) {
-        menu.count += 1;
-        $scope.total_price += menu.price;
-    };
 
-    $scope.menu_count_minus = function(menu) {
-        menu.count -= 1;
-        if(menu.count < 0) {
-            menu.count = 0;
+    $scope.getMenuList();
+
+    $scope.total_price = 0;
+    $scope.table_num = null;
+
+    $scope.updateMenuCount = function(menu_obj, count) {
+        if(count < 0){
+            count = 0;
         }
-        else {
-            $scope.total_price -= menu.price;
+
+        $scope.total_price -= parseInt(menu_obj.price * menu_obj.count);
+        menu_obj.count = count;
+        $scope.total_price += parseInt(menu_obj.price * menu_obj.count);
+    };
+
+    $scope.updateMenuCountDirectly = function() {
+        $scope.total_price = 0;
+        for(var i in $scope.menu_list) {
+            $scope.total_price += ($scope.menu_list[i].price * $scope.menu_list[i].count);
         }
     };
 
-    $scope.menu_count_reset = function(menu) {
-        $scope.total_price -= (menu.price * menu.count);
-        menu.count = 0;
-    };
-
-    $scope.order_request = function() {
+    $scope.requestOrder = function() {
         $http({
             method: 'POST',
             url: '/api/order/request',
@@ -330,53 +301,57 @@ OMS.controller('orderRequestController', function($rootScope, $scope, $http, $st
             },
             data: {
                 group_id: $cookies.get('selected_group'),
-                menus: $scope.menus,
+                menus: $scope.menu_list,
                 table_num: $scope.table_num
             }
         }).then(function successCallback(response) {
-            alert("주문 요청이 완료되었습니다.\n주문번호는 " + response.data.data.insertId + "번 입니다.");
-            $scope.get_menu_list();
+            alert("주문 요청이 완료되었습니다.\n주문번호는 " + response.data.data.id + "번 입니다.");
+            $scope.getMenuList();
             $scope.total_price = 0;
             $scope.table_num = null;
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-
-    $scope.total_price = 0;
-    $scope.table_num = null;
-    
-    $scope.get_menu_list();
-
-    $rootScope.webSocket.on('menuEvent', function(data) {
-        if($state.is('order.request')) {
-            $scope.get_menu_list();
-        }
-    });
 });
 
-OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $state, $cookies) {
-    $scope.get_pending_list = function() {
+OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $cookies) {
+
+    $scope.current_page_num = 1;
+
+    $scope.getPendingList = function() {
         $http({
             method: 'GET',
-            url: '/api/order/list?group_id=' + $cookies.get('selected_group') + '&show_only_pending=1',
+            url: '/api/order/list?group_id=' + $cookies.get('selected_group') + '&show_only_pending=1&page_offset=' + $scope.current_page_num,
             headers: {
                 Authorization: $cookies.get('access_token')
             }
         }).then(function successCallback(response) {
-            $scope.pending_list = response.data.data;
-            $scope.current_unixtime = parseInt((new Date()).getTime() / 1000);
+            $scope.pending_list = response.data.data.list;
+            $scope.pagination_info = response.data.data.pagination_info;
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
+    
+    $scope.getPendingList();
 
-    $scope.get_elapsed_time_text = function(seconds) {
-        return parseInt(seconds / 60) + "분 " + parseInt(seconds % 60) + "초";
+    $scope.show_order_content = function(data) {
+        var content_text = "주문번호: " + data.id + "\n";
+        content_text += "주문자명: " + data.user_name + "\n";
+        content_text += "주문 총액: " + data.total_price + "\n";
+        content_text += "테이블 번호: " + data.table_num + "\n";
+        content_text += "주문 시간: " + $rootScope.getDateTimeText(data.createdAt) + "\n";
+        content_text += "\n[주문 내역]\n";
+        for(var i in data.content) {
+            content_text += data.content[i].name + " " + data.content[i].count + "개\n";
+        }
+        alert(content_text);
     };
 
-    $scope.update_pending_data = function(order_id, is_approve) {
-        var confirm_check_message = "주문번호 " + order_id + "을(를) " + ((is_approve == true) ? "승인" : "취소") + "하시겠습니까?";
+    $scope.update_pending_data = function(order_id, approve_status) {
+
+        var confirm_check_message = "주문번호 " + order_id + "을(를) " + ((approve_status == true) ? "승인" : "취소") + "하시겠습니까?";
         if(confirm(confirm_check_message)) {
             $http({
                 method: 'POST',
@@ -385,65 +360,65 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $st
                     Authorization: $cookies.get('access_token')
                 },
                 data: {
-                    is_approve: is_approve
+                    is_approve: approve_status
                 }
             }).then(function successCallback(response) {
-                $scope.get_pending_list();
+                $scope.getPendingList();
             }, function errorCallback(response) {
                 alert(response.data.message);
             });
         }
     };
-    
-    $scope.show_order_content = function(data) {
-        var content_text = "주문번호: " + data.id + "\n";
-        content_text += "주문자명: " + data.user_name + "\n";
-        content_text += "주문 총액: " + data.total_price + "\n";
-        content_text += "테이블 번호: " + data.table_num + "\n";
-        content_text += "주문 시간: " + $rootScope.get_time_text(data.created_at) + "\n";
-        content_text += "\n[주문 내역]\n";
-        for(var i in data.content) {
-            content_text += data.content[i].name + " " + data.content[i].count + "개\n";
-        }
-        alert(content_text);
+
+    $scope.gotoPrevPage = function() {
+        if(!$scope.pagination_info.prev_active)
+            return;
+
+        $scope.current_page_num -= 1;
+        $scope.getPendingList();
     };
 
-    $scope.get_pending_list();
+    $scope.gotoNextPage = function() {
+        if(!$scope.pagination_info.next_active)
+            return;
 
-    $rootScope.webSocket.on('orderEvent', function(data) {
-        if($state.is('order.confirm')) {
-            $scope.get_pending_list();
-        }
-    });
+        $scope.current_page_num += 1;
+        $scope.getPendingList();
+    };
+
+    $scope.gotoSpecificPage = function(page_num) {
+        $scope.current_page_num = page_num;
+        $scope.getPendingList();
+    };
 });
 
-OMS.controller('orderStatusController', function($rootScope, $scope, $http, $state, $cookies) {
-    $scope.get_order_list = function() {
+OMS.controller('orderListController', function($rootScope, $scope, $http, $cookies) {
+
+    $scope.current_page_num = 1;
+
+    $scope.getOrderList = function() {
         $http({
             method: 'GET',
-            url: '/api/order/list?group_id=' + $cookies.get('selected_group'),
+            url: '/api/order/list?group_id=' + $cookies.get('selected_group') + '&order_desc=1&show_only_my_request=' + (($scope.show_only_my_request) ? 1 : 0) + "&page_offset=" + $scope.current_page_num,
             headers: {
                 Authorization: $cookies.get('access_token')
             }
         }).then(function successCallback(response) {
-            $scope.order_list = response.data.data;
-            $scope.order_list.sort(function(a, b) { return b.id - a.id});
-            $scope.current_unixtime = parseInt((new Date()).getTime() / 1000);
+            $scope.order_list = response.data.data.list;
+            $scope.pagination_info = response.data.data.pagination_info;
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-
-    $scope.get_elapsed_time_text = function(seconds) {
-        return parseInt(seconds / 60) + "분 " + parseInt(seconds % 60) + "초";
-    };
+    
+    $scope.getOrderList();
 
     $scope.show_order_content = function(data) {
         var content_text = "주문번호: " + data.id + "\n";
         content_text += "주문자명: " + data.user_name + "\n";
         content_text += "주문 총액: " + data.total_price + "\n";
         content_text += "테이블 번호: " + data.table_num + "\n";
-        content_text += "주문 시간: " + $rootScope.get_time_text(data.created_at) + "\n";
+        content_text += "주문 시간: " + $rootScope.getDateTimeText(data.createdAt) + "\n";
         content_text += "\n[주문 내역]\n";
         for(var i in data.content) {
             content_text += data.content[i].name + " " + data.content[i].count + "개\n";
@@ -451,104 +426,104 @@ OMS.controller('orderStatusController', function($rootScope, $scope, $http, $sta
         alert(content_text);
     };
 
-    $scope.get_order_list();
+    $scope.gotoPrevPage = function() {
+        if(!$scope.pagination_info.prev_active)
+            return;
 
-    $rootScope.webSocket.on('orderEvent', function(data) {
-        if($state.is('order.status')) {
-            $scope.get_order_list();
-        }
-    });
+        $scope.current_page_num -= 1;
+        $scope.getOrderList();
+    };
+
+    $scope.gotoNextPage = function() {
+        if(!$scope.pagination_info.next_active)
+            return;
+
+        $scope.current_page_num += 1;
+        $scope.getOrderList();
+    };
+
+    $scope.gotoSpecificPage = function(page_num) {
+        $scope.current_page_num = page_num;
+        $scope.getOrderList();
+    };
 });
 
-OMS.controller('queueStatisticsController', function($rootScope, $scope, $http, $state, $cookies) {
+OMS.controller('statisticsWaitingController', function($rootScope, $scope, $http, $cookies) {
 
-    $scope.get_queue_information = function() {
+    $scope.getWaitingList = function() {
         $http({
             method: 'GET',
-            url: '/api/statistics/queue?group_id=' + $cookies.get('selected_group'),
+            url: '/api/statistics/waiting/list?group_id=' + $cookies.get('selected_group'),
             headers: {
                 Authorization: $cookies.get('access_token')
             }
         }).then(function successCallback(response) {
-            var order_price_list = response.data.data.order_price_list;
-            var waitings = response.data.data.waitings;
-
-            $scope.total_sales = 0;
-            for(var i in order_price_list) {
-                $scope.total_sales += order_price_list[i].total_price;
-            }
-
             $scope.menu_list = response.data.data.menu_list;
+            
             for(var i in $scope.menu_list) {
-                $scope.menu_list[i].total_sale_count = 0;
-                $scope.menu_list[i].current_waiting_count = 0;
-                $scope.menu_list[i].queue = [];
-            }
+                $scope.menu_list[i].total_count = 0;
+                $scope.menu_list[i].waiting_count = 0;
+                $scope.menu_list[i].waiting_list = [];
 
-            for(var i in waitings) {
-                for(var j in $scope.menu_list) {
-                    if($scope.menu_list[j].id == waitings[i].menu_id) {
-                        $scope.menu_list[j].total_sale_count += waitings[i].amount;
-                        if(waitings[i].is_served == 0) {
-                            $scope.menu_list[j].current_waiting_count += waitings[i].amount;
-                            $scope.menu_list[j].queue.push({
-                                id: waitings[i].id,
-                                content: "T" + waitings[i].table_num + " / " + waitings[i].amount + "개"
+                for(var j in response.data.data.waitings) {
+                    if($scope.menu_list[i].id == response.data.data.waitings[j].menu_id) {
+                        $scope.menu_list[i].total_count += response.data.data.waitings[j].amount;
+
+                        if(response.data.data.waitings[j].is_served == 0) {
+                            $scope.menu_list[i].waiting_count += response.data.data.waitings[j].amount;
+                            $scope.menu_list[i].waiting_list.push({
+                                id: response.data.data.waitings[j].id,
+                                content: "T" + response.data.data.waitings[j].table_num + " / " + response.data.data.waitings[j].amount + "개"
                             });
                         }
-
-                        break;
                     }
                 }
             }
+            
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-    
+
+    $scope.getWaitingList();
+
     $scope.update_waiting_status = function(menu_data, waiting_data) {
         var confirm_check_message = "[" + menu_data.name + "] 메뉴 대기열에서 [" + waiting_data.content + "]를 제거하시겠습니까?";
         if(confirm(confirm_check_message)) {
             $http({
                 method: 'POST',
-                url: '/api/statistics/clear_waiting/' + waiting_data.id,
+                url: '/api/statistics/waiting/clear/' + waiting_data.id,
                 headers: {
                     Authorization: $cookies.get('access_token')
                 }
             }).then(function successCallback(response) {
-                //Socket Event로 새로고침하기 때문에 여기서 따로 할 것은 없다.
+                $scope.getWaitingList();
             }, function errorCallback(response) {
                 alert(response.data.message);
             });
         }
     };
-
-    $scope.get_queue_information();
-
-    $rootScope.webSocket.on('queueEvent', function(data) {
-        if($state.is('statistics.queue')) {
-            $scope.get_queue_information();
-        }
-    });
 });
 
-OMS.controller('memberManageController', function($rootScope, $scope, $http, $state, $cookies) {
+OMS.controller('manageMemberController', function($scope, $http, $cookies) {
     
-    $scope.get_member_list = function() {
+    $scope.getMemberList = function() {
         $http({
             method: 'GET',
-            url: '/api/group/members?group_id=' + $cookies.get('selected_group'),
+            url: '/api/group/members/' + $cookies.get('selected_group'),
             headers: {
                 Authorization: $cookies.get('access_token')
             }
         }).then(function successCallback(response) {
-            $scope.members = response.data.data;
+            $scope.member_list = response.data.data;
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-
-    $scope.add_new_member = function() {
+    
+    $scope.getMemberList();
+    
+    $scope.addMember = function() {
         $http({
             method: 'POST',
             url: '/api/group/join',
@@ -556,66 +531,24 @@ OMS.controller('memberManageController', function($rootScope, $scope, $http, $st
                 Authorization: $cookies.get('access_token')
             },
             data: {
-                user_id: $scope.user_id,
-                email: $scope.user_email,
-                group_id: $cookies.get('selected_group')
+                group_id: $cookies.get('selected_group'),
+                email: $scope.email
             }
         }).then(function successCallback(response) {
-            $scope.user_email = null;
-            $scope.get_member_list();
+            $scope.getMemberList();
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
-    
-    $scope.remove_exist_member = function() {
-        alert('아직 지원하지 않는 기능입니다.');
-    };
 
-    $scope.user_email = null;
-
-    $scope.get_member_list();
+    $scope.remove_exist_member = function(user_id) {
+        alert('아직 구현되지 않았습니다!');
+    }
 });
 
-OMS.controller('menuManageController', function($rootScope, $scope, $http, $state, $cookies) {
+OMS.controller('manageMenuController', function($scope, $http, $cookies) {
 
-    $scope.update_menu_price = function(menuObj, state) {
-        $http({
-            method: 'POST',
-            url: '/api/menu/update/' + menuObj.id,
-            headers: {
-                Authorization: $cookies.get('access_token')
-            },
-            data: {
-                price: menuObj.price,
-                is_available: state
-            }
-        }).then(function successCallback(response) {
-            //menuObj.is_available = !menuObj.is_available;
-        }, function errorCallback(response) {
-            alert(response.data.message);
-        });
-    };
-
-    $scope.update_menu_state = function(menuObj, state) {
-        $http({
-            method: 'POST',
-            url: '/api/menu/update/' + menuObj.id,
-            headers: {
-                Authorization: $cookies.get('access_token')
-            },
-            data: {
-                price: menuObj.price,
-                is_available: state
-            }
-        }).then(function successCallback(response) {
-            menuObj.is_available = !menuObj.is_available;
-        }, function errorCallback(response) {
-            alert(response.data.message);
-        });
-    };
-
-    $scope.get_menu_list = function() {
+    $scope.getMenuList = function() {
         $http({
             method: 'GET',
             url: '/api/menu/list?group_id=' + $cookies.get('selected_group'),
@@ -623,13 +556,15 @@ OMS.controller('menuManageController', function($rootScope, $scope, $http, $stat
                 Authorization: $cookies.get('access_token')
             }
         }).then(function successCallback(response) {
-            $scope.menus = response.data.data;
+            $scope.menu_list = response.data.data;
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
 
-    $scope.add_new_menu = function() {
+    $scope.getMenuList();
+
+    $scope.addMenu = function() {
         $http({
             method: 'POST',
             url: '/api/menu/create',
@@ -637,21 +572,34 @@ OMS.controller('menuManageController', function($rootScope, $scope, $http, $stat
                 Authorization: $cookies.get('access_token')
             },
             data: {
-                name: $scope.new_memu_name,
+                name: $scope.new_menu_name,
                 price: $scope.new_menu_price,
                 group_id: $cookies.get('selected_group')
             }
         }).then(function successCallback(response) {
-            $scope.new_memu_name = null;
+            $scope.getMenuList();
+            $scope.new_menu_name = null;
             $scope.new_menu_price = null;
-            $scope.get_menu_list();
         }, function errorCallback(response) {
             alert(response.data.message);
         });
     };
 
-    $scope.new_memu_name = null;
-    $scope.new_menu_price = null;
-
-    $scope.get_menu_list();
+    $scope.updateMenu = function(menu_obj, is_active) {
+        $http({
+            method: 'POST',
+            url: '/api/menu/update/' + menu_obj.id,
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                price: menu_obj.price,
+                is_available: is_active
+            }
+        }).then(function successCallback(response) {
+            $scope.getMenuList();
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
 });
