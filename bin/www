@@ -6,7 +6,7 @@
 
 var app = require('../app');
 var express = app.express;
-var debug = require('debug')('HanyangOnlineJudge_API:server');
+var debug = require('debug')('OrderManagementSystem:server');
 var https = require('https');
 var http = require('http');
 var fs = require('fs');
