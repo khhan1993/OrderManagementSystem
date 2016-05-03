@@ -1,0 +1,48 @@
+<section class="page-header page-header-light page-header-more-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>그룹 생성 <span>새로운 그룹을 만들 수 있습니다.</span></h1>
+                <ul class="breadcrumb breadcrumb-valign-mid">
+                    <li>group</li>
+                    <li>create</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="featured-boxes">
+                <div class="row">
+                    <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+                        <div class="featured-box featured-box-primary align-left mt-xlg">
+                            <div class="box-content">
+                                <h4 class="heading-primary text-uppercase mb-md">새로운 그룹 생성</h4>
+                                <form ng-submit="create_group()">
+                                    <div class="row">
+                                        <div class="form-group">
+                                            <div class="col-md-12">
+                                                <label>그룹 이름 (중복 가능)</label>
+                                                <input type="text" class="form-control input-lg" ng-model="group_name">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6"></div>
+                                        <div class="col-md-6">
+                                            <input type="submit" value="생성하기" class="btn btn-primary pull-right mb-xl">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
