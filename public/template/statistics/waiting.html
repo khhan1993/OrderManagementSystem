@@ -1,0 +1,42 @@
+<section class="page-header page-header-light page-header-more-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>대기열 <button type="button" ng-click="getWaitingList()" class="btn btn-warning btn-xs mr-xs mb-sm">수동 새로고침</button> <span>각 메뉴별 대기 수량 및 대기열을 볼 수 있습니다.</span></h1>
+                <ul class="breadcrumb breadcrumb-valign-mid">
+                    <li>statistics</li>
+                    <li>waiting</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>메뉴명</th>
+                        <th>총 수량</th>
+                        <th>대기 수량</th>
+                        <th>대기열</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="menu in menu_list">
+                        <td>{{menu.name}}</td>
+                        <td>{{menu.total_count}}</td>
+                        <td>{{menu.waiting_count}}</td>
+                        <td>
+                            <span ng-repeat="data in menu.waiting_list">
+                                <button type="button" class="btn btn-default btn-xs" data-ng-click="update_waiting_status(menu, data)">{{data.content}}</button>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
