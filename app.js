@@ -7,28 +7,12 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var fs = require('fs');
 
-//Set DB connection info. Related information is in databse.config.json file.
-var mysql_connection_info = JSON.parse(fs.readFileSync(__dirname + '/database.config.json', 'utf-8'));
-var connection_obj = mysql.createConnection({
-  host: mysql_connection_info.host,
-  user: mysql_connection_info.user,
-  password: mysql_connection_info.password,
-  database: mysql_connection_info.database,
-  multipleStatements: true
-});
-
 var routes = require('./routes/index');
 var api = require('./routes/api');
 
 var app = express();
 
 // uncomment after placing your favicon in /public
-app.use(function(req, res, next) {
-  if (!req.secure) {
-    return res.redirect('https://' + req.headers.host + req.url);
-  }
-  next();
-});
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
@@ -56,7 +40,7 @@ if (app.get('env') === 'development') {
     res.jsonp({
       state: false,
       message: err.message,
-      data: err.stack
+      data: err.data
     });
 
     //콘솔로 에러메세지 출력.
@@ -77,6 +61,4 @@ app.use(function(err, req, res, next) {
   });
 });
 
-
-exports.express = app;
-exports.db_connection = connection_obj;
+module.exports = app;
