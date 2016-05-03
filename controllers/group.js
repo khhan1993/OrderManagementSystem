@@ -1,24 +1,14 @@
 'use strict';
 
 var async = require('async');
-var app = require('../app');
-var unixTime = require('unix-time');
-var sha512 = require('sha512');
 var value_checker = require('../helper/value_checker');
+var error_handler = require('../helper/error_handler');
+var models = require('../models');
 
 function create(req, res, next) {
 
     //JWT의 decode를 진행한다.
     var decoded_jwt = value_checker.jwt_checker(req.header('Authorization'));
-
-    //decode 성공 여부를 확인한다. 이 API는 사용자 인증이 필요하다. 실패시 401에러처리.
-    if(decoded_jwt == null) {
-        let custom_err = new Error('Failed to decode JWT!');
-        custom_err.status = 401;
-        next(custom_err);
-        
-        return;
-    }
 
     //필수 정보 받기.
     var name = req.body.name;
@@ -26,60 +16,34 @@ function create(req, res, next) {
     //빈 값이 있는지 확인.
     var checklist = [name];
     if(value_checker.is_empty_check(checklist)) {
-        let custom_err = new Error('Required value is empty!');
-        custom_err.status = 400;
-        next(custom_err);
-        
+        error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
         return;
     }
-
+    
     //그룹 생성 절차를 진행한다.
-    //TODO: Transaction block required!
+    //TODO: Concurrency 및 Transaction 문제가 발생할 수 있음. 확실하게 하고싶다면 lock을 사용할 것!
     async.waterfall([
-        //우선 그룹을 생성한다.
+        //그룹 생성
         function(callback) {
-            var queryStr = "INSERT INTO `groups` SET `name` = ?, `creator` = ?, `created_at` = ?, `updated_at` = ?";
-            var queryVal = [name, decoded_jwt['uid'], unixTime(new Date()), unixTime(new Date())];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null, rows.insertId);
-                }
+            var newGroup = (models.group).build({
+                name: name,
+                creator: decoded_jwt['uid']
             });
+
+            newGroup.save().then(function(data) { callback(null, data) }).catch(function(err) { callback(err) });
         },
-        //그 다음에 멤버 추가도 진행한다.
-        function(inserted_id, callback) {
-            var queryStr = "INSERT INTO `members` SET `user_id` = ?, `group_id` = ?, `identifier` = ?, `created_at` = ?, `updated_at` = ?";
-            var queryVal = [decoded_jwt['uid'], inserted_id, sha512(decoded_jwt['uid'] + "UNIQUE" + inserted_id).toString('hex'), unixTime(new Date()), unixTime(new Date())];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null);
-                }
+        //멤버 추가
+        function(inserted_data, callback) {
+            var newMember = (models.member).build({
+                user_id: inserted_data.dataValues.creator,
+                group_id: inserted_data.dataValues.id
             });
+
+            newMember.save().then(function() { callback(null) }).catch(function(err) { callback(err) });
         }
     ],
     function(err, results) {
-        if(err) {
-            let custom_err = new Error('Database query error!');
-            custom_err.status = 500;
-            next(custom_err);
-            
-            return;
-        }
-        else {
-            res.jsonp({
-                state: true,
-                mesasge: "OK",
-                data: null
-            });
-
-            return;
-        }
+        error_handler.async_final(err, res, next, null);
     });
 }
 
@@ -88,116 +52,71 @@ function info(req, res, next) {
     //JWT의 decode를 진행한다.
     var decoded_jwt = value_checker.jwt_checker(req.header('Authorization'));
 
-    //decode 성공 여부를 확인한다. 이 API는 사용자 인증이 필요하다. 실패시 401에러처리.
-    if(decoded_jwt == null) {
-        let custom_err = new Error('Failed to decode JWT!');
-        custom_err.status = 401;
-        next(custom_err);
-
-        return;
-    }
-
     //필수 정보 받기.
     var group_id = req.params.group_id;
 
     //빈 값이 있는지 확인.
     var checklist = [group_id];
     if(value_checker.is_empty_check(checklist)) {
-        let custom_err = new Error('Required value is empty!');
-        custom_err.status = 400;
-        next(custom_err);
-
+        error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
         return;
     }
 
     //음이 아닌 정수인지 확인.
     var num_check_list = [group_id];
     if(!value_checker.is_positive_integer_check(num_check_list)) {
-        let custom_err = new Error('GroupID must be integer format!');
-        custom_err.status = 400;
-        next(custom_err);
-
+        error_handler.custom_error_handler(400, 'GroupID must be integer format!', null, next);
         return;
     }
 
-    //그룹 정보를 조회한다.
-    async.series([
-        //우선 해당 그룹에 속해있는 유저인지 검사한다.
+    //그룹 정보 받기
+    async.waterfall([
+        //우선 해당 그룹에 속한 멤버인지 확인한다.
+        //TODO: DB JOIN으로 수정할 수 있도록 할 것! (2, 3번째 함수)
         function(callback) {
-            var queryStr = "SELECT COUNT(*) AS `check_count` FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
-            var queryVal = [decoded_jwt['uid'], group_id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    if(rows[0].check_count == 0) {
-                        let custom_err = new Error('Only member of this group can get information about it!');
-                        custom_err.status = 403;
-                        next(custom_err);
-
+            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: group_id } })
+                .then(function(data) {
+                    //미소속인 경우
+                    if(!data) {
+                        error_handler.custom_error_handler(403, 'Only member of this group can get member list!', null, next);
                         return;
                     }
+                    //소속인 경우
                     else {
                         callback(null);
                     }
-                }
-            });
+                })
+                .catch(function(err) { callback(err) });
         },
-        //이제 그룹 정보를 가져온다.
+        //그룹 정보를 조회한다.
         function(callback) {
-            var queryStr = "SELECT `groups`.`id`, `groups`.`name` AS `group_name`, `users`.`name` AS `creator_name`, `groups`.`created_at` FROM `groups` JOIN `users` ON `users`.`id` = `groups`.`creator` AND `groups`.`id` = ?";
-            var queryVal = [group_id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null, rows[0]);
-                }
-            });
+            (models.group).findOne({ where: { id: group_id } })
+                .then(function(data) {
+                    callback(null, data.dataValues);
+                })
+                .catch(function(err) { callback(err) });
         },
-        //그룹의 멤버 수도 가져온다.
-        function(callback) {
-            var queryStr = "SELECT COUNT(*) AS `check_count` FROM `members` WHERE `group_id` = ?";
-            var queryVal = [group_id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null, rows[0].check_count);
-                }
-            });
+        //만든사람 정보 조회
+        function(group_info, callback) {
+            (models.user).findOne({ where: { id: group_info.creator } })
+                .then(function(data) {
+                    var added_data = {
+                        group_id: group_info.id,
+                        group_name: group_info.name,
+                        group_creator : {
+                            user_id: data.dataValues.id,
+                            user_name: data.dataValues.name
+                        },
+                        group_creation_date: group_info.createdAt
+                    };
+
+                    callback(null, added_data);
+                })
+                .catch(function(err) { callback(err) });
         }
     ],
     function(err, results) {
-        if(err) {
-            let custom_err = new Error('Database query error!');
-            custom_err.status = 500;
-            next(custom_err);
-
-            return;
-        }
-        else {
-            res.jsonp({
-                state: true,
-                mesasge: "OK",
-                data: {
-                    group_info: results[1],
-                    num_of_group_members: results[2],
-                    user_info: {
-                        uid: decoded_jwt['uid'],
-                        name: decoded_jwt['name'],
-                        email: decoded_jwt['email'],
-                        ip_address: decoded_jwt['ip_address'],
-                        exp: decoded_jwt['exp']
-                    }
-                }
-            });
-
-            return;
-        }
+        error_handler.async_final(err, res, next, results);
     });
 }
 
@@ -206,15 +125,6 @@ function join(req, res, next) {
     //JWT의 decode를 진행한다.
     var decoded_jwt = value_checker.jwt_checker(req.header('Authorization'));
 
-    //decode 성공 여부를 확인한다. 이 API는 사용자 인증이 필요하다. 실패시 401에러처리.
-    if(decoded_jwt == null) {
-        let custom_err = new Error('Failed to decode JWT!');
-        custom_err.status = 401;
-        next(custom_err);
-
-        return;
-    }
-
     //필수 정보 받기.
     var group_id = req.body.group_id;
     var email = req.body.email;
@@ -222,273 +132,204 @@ function join(req, res, next) {
     //빈 값이 있는지 확인.
     var checklist = [group_id, email];
     if(value_checker.is_empty_check(checklist)) {
-        let custom_err = new Error('Required value is empty!');
-        custom_err.status = 400;
-        next(custom_err);
-
+        error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
         return;
     }
 
     //음이 아닌 정수인지 확인.
     var num_check_list = [group_id];
     if(!value_checker.is_positive_integer_check(num_check_list)) {
-        let custom_err = new Error('GroupID and UserID must be integer format!');
-        custom_err.status = 400;
-        next(custom_err);
-
+        error_handler.custom_error_handler(400, 'GroupID must be integer format!', null, next);
         return;
     }
 
-    //유저를 그룹에 추가하는 작업을 진행한다.
+    //유저 추가 작업 진행
     async.waterfall([
         //우선 Group의 creator인지를 확인한다.
         function(callback) {
-            var queryStr = "SELECT COUNT(*) AS `check_count` FROM `groups` WHERE `id` = ? AND `creator` = ?";
-            var queryVal = [group_id, decoded_jwt['uid']];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    if(rows[0].check_count == 0) {
-                        let custom_err = new Error('Only creator of this group can add user!');
-                        custom_err.status = 403;
-                        next(custom_err);
-
+            (models.group).findOne({ where: { id: group_id, creator: decoded_jwt['uid'] } })
+                .then(function(data) {
+                    if(!data) {
+                        error_handler.custom_error_handler(404, 'Cannot get requested group info!', null, next);
                         return;
                     }
                     else {
                         callback(null);
                     }
-                }
-            });
+
+                })
+                .catch(function(err) { callback(err) });
         },
-        //그 다음엔 추가할려는 유저가 이미 존재하는 유저인지 확인한다.
+        //추가하려는 유저가 실제 가입했는지 확인.
         function(callback) {
-            var queryStr = "SELECT * FROM `users` WHERE `email` = ? AND `is_active` = 1";
-            var queryVal = [email];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    if(rows.length == 0) {
-                        let custom_err = new Error('Requested email is not avaliable!');
-                        custom_err.status = 400;
-                        next(custom_err);
-
+            (models.user).findOne({ where: { email: email, is_active: 1 }})
+                .then(function(data) {
+                    if(!data) {
+                        error_handler.custom_error_handler(404, 'Cannot get requested user info!', null, next);
                         return;
                     }
                     else {
-                        callback(null, rows[0]);
+                        callback(null, data);
                     }
-                }
-            });
+                })
+                .catch(function(err) { callback(err) });
         },
-        //중복으로 추가되는것을 방지하기 위해 해당 그룹의 멤버로 이미 추가되어있는지 확인한다.
+        //해당 그룹에 이미 추가되어있는지 확인한다.
+        //TODO: 이 부분에서 Concurrency 문제 발생 가능!
         function(user_info, callback) {
-            var queryStr = "SELECT COUNT(*) AS `check_count` FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
-            var queryVal = [user_info.id, group_id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    if(rows[0].check_count != 0) {
-                        let custom_err = new Error('Requested user already added to group!');
-                        custom_err.status = 400;
-                        next(custom_err);
-
-                        return;
-                    }
-                    else {
+            (models.member).find({ where: { user_id: user_info.dataValues.id, group_id: group_id } })
+                .then(function(data) {
+                    console.log(data);
+                    if(!data) {
                         callback(null, user_info);
                     }
-                }
-            });
+                    else {
+                        error_handler.custom_error_handler(400, 'Requested user already added to group!', null, next);
+                        return;
+                    }
+                })
+                .catch(function(err) { callback(err) });
         },
-        //이제 유저를 이 그룹의 멤버로 추가한다.
+        //이제 유저를 이 그룹에 추가한다.
+        //TODO: 이 부분에서 Concurrency 문제 발생 가능!
         function(user_info, callback) {
-            var queryStr = "INSERT INTO `members` SET `user_id` = ?, `group_id` = ?, `identifier` = ?, `created_at` = ?, `updated_at` = ?";
-            var queryVal = [user_info.id, group_id, sha512(user_info.id + "UNIQUE" + group_id).toString('hex'), unixTime(new Date()), unixTime(new Date())];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null);
-                }
+            var newMember = (models.member).build({
+                user_id: user_info.dataValues.id,
+                group_id: group_id
             });
+
+            newMember.save().then(function() { callback(null) }).catch(function(err) { callback(err) });
         }
     ],
     function(err, results) {
-        if(err) {
-            let custom_err = new Error('Database query error!');
-            custom_err.status = 500;
-            next(custom_err);
-
-            return;
-        }
-        else {
-            res.jsonp({
-                state: true,
-                mesasge: "OK",
-                data: null
-            });
-
-            return;
-        }
+        error_handler.async_final(err, res, next, null);
     });
 }
 
 function left(req, res, next) {
     let custom_err = new Error('Not implemented yet!');
-    custom_err.status = 404;
+    custom_err.status = 403;
     next(custom_err);
 }
 
-//자신이 속해있는 그룹 리스트만 출력된다.
 function list(req, res, next) {
 
     //JWT의 decode를 진행한다.
     var decoded_jwt = value_checker.jwt_checker(req.header('Authorization'));
 
-    //decode 성공 여부를 확인한다. 이 API는 사용자 인증이 필요하다. 실패시 401에러처리.
-    if(decoded_jwt == null) {
-        let custom_err = new Error('Failed to decode JWT!');
-        custom_err.status = 401;
-        next(custom_err);
-
-        return;
-    }
-
-    //유저가 속해있는 그룹 정보를 받아온다.
-    async.series([
+    //유저가 속한 그룹의 리스트를 얻는다.
+    //TODO: JOIN 쿼리로 해결할 수 있도록 할 것! (지금의 구현은 ORM사용법 미숙으로 인해 급하게 구현한 것!)
+    async.waterfall([
+        //멤버 리스트 조회
         function(callback) {
-            var queryStr = "SELECT `groups`.`id`, `groups`.`name`, `groups`.`created_at` FROM `groups` JOIN `members` ON `groups`.`id` = `members`.`group_id` AND `user_id` = ?";
-            var queryVal = [decoded_jwt['uid']];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
+            (models.member).findAndCountAll({
+                where: { user_id: decoded_jwt['uid'] },
+                attributes: ['user_id', 'group_id']
+            }).then(function(data) {
+                var member_list = [];
+                for(var i in data.rows) {
+                    member_list.push(data.rows[i].dataValues);
                 }
-                else {
-                    callback(null, rows);
+                callback(null, member_list);
+            }).catch(function(err) { callback(err) });
+        },
+        //그룹 리스트 조회
+        function(member_list, callback) {
+            var filter_option = [];
+            for(var i in member_list) {
+                filter_option.push(member_list[i].group_id);
+            }
+
+            (models.group).findAndCountAll({
+                where: { id: filter_option }
+            }).then(function(data) {
+                var group_list = [];
+                for(var i in data.rows) {
+                    group_list.push(data.rows[i].dataValues);
                 }
-            });
+                callback(null, group_list);
+            }).catch(function(err) { callback(err) });
         }
     ],
     function(err, results) {
-        if(err) {
-            let custom_err = new Error('Database query error!');
-            custom_err.status = 500;
-            next(custom_err);
-
-            return;
-        }
-        else {
-            res.jsonp({
-                state: true,
-                mesasge: "OK",
-                data: results[0]
-            });
-
-            return;
-        }
+        error_handler.async_final(err, res, next, results);
     });
 }
 
 function members(req, res, next) {
-
+    
     //JWT의 decode를 진행한다.
     var decoded_jwt = value_checker.jwt_checker(req.header('Authorization'));
 
-    //decode 성공 여부를 확인한다. 이 API는 사용자 인증이 필요하다. 실패시 401에러처리.
-    if(decoded_jwt == null) {
-        let custom_err = new Error('Failed to decode JWT!');
-        custom_err.status = 401;
-        next(custom_err);
-
-        return;
-    }
-
     //필수 정보 받기.
-    var group_id = req.query.group_id;
+    var group_id = req.params.group_id;
 
     //빈 값이 있는지 확인.
     var checklist = [group_id];
     if(value_checker.is_empty_check(checklist)) {
-        let custom_err = new Error('Required value is empty!');
-        custom_err.status = 400;
-        next(custom_err);
-
+        error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
         return;
     }
 
     //음이 아닌 정수인지 확인.
     var num_check_list = [group_id];
     if(!value_checker.is_positive_integer_check(num_check_list)) {
-        let custom_err = new Error('GroupID and TableNum must be integer format!');
-        custom_err.status = 400;
-        next(custom_err);
-
+        error_handler.custom_error_handler(400, 'GroupID must be integer format!', null, next);
         return;
     }
 
-    //멤버 정보를 받아온다.
-    async.series([
-        //우선 해당 그룹에 속해있는 유저인지 검사한다.
+    //멤버 정보 받기
+    async.waterfall([
+        //우선 해당 그룹에 속한 멤버인지 확인한다.
+        //TODO: DB JOIN으로 수정할 수 있도록 할 것! (2, 3번째 함수)
         function(callback) {
-            var queryStr = "SELECT COUNT(*) AS `check_count` FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
-            var queryVal = [decoded_jwt['uid'], group_id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    if(rows[0].check_count == 0) {
-                        let custom_err = new Error('Only member of this group can get information about it!');
-                        custom_err.status = 403;
-                        next(custom_err);
-
+            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: group_id } })
+                .then(function(data) {
+                    //미소속인 경우
+                    if(!data) {
+                        error_handler.custom_error_handler(403, 'Only member of this group can get member list!', null, next);
                         return;
                     }
+                    //소속인 경우
                     else {
                         callback(null);
                     }
-                }
-            });
+                })
+                .catch(function(err) { callback(err) });
         },
-        //멤버 정보를 받아온다.
+        //멤버 리스트를 조회한다.
         function(callback) {
-            var queryStr = "SELECT `users`.`id`, `users`.`name`, `members`.`created_at` FROM `users` JOIN `members` ON `users`.`id` = `members`.`user_id` AND `members`.`group_id` = ?";
-            var queryVal = [group_id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null, rows);
-                }
-            });
+            (models.member).findAndCountAll({ where: { group_id: group_id } })
+                .then(function(data) {
+                    var member_list = [];
+                    for(var i in data.rows) {
+                        member_list.push(data.rows[i].dataValues);
+                    }
+                    callback(null, member_list);
+                })
+                .catch(function(err) { callback(err) });
+        },
+        //이름을 얻어볼까??
+        function(member_list, callback) {
+            var filter_option = [];
+            for(var i in member_list) {
+                filter_option.push(member_list[i].user_id);
+            }
+
+            (models.user).findAndCountAll({
+                where: { id: filter_option },
+                attributes: ['id', 'name', 'createdAt']
+            }).then(function(data) {
+                    var user_list = [];
+                    for(var i in data.rows) {
+                        user_list.push(data.rows[i].dataValues);
+                    }
+                    callback(null, user_list);
+                }).catch(function(err) { callback(err) });
         }
     ],
     function(err, results) {
-        if(err) {
-            let custom_err = new Error('Database query error!');
-            custom_err.status = 500;
-            next(custom_err);
-
-            return;
-        }
-        else {
-            res.jsonp({
-                state: true,
-                mesasge: "OK",
-                data: results[1]
-            });
-
-            return;
-        }
+        error_handler.async_final(err, res, next, results);
     });
 }
 
