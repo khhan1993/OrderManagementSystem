@@ -7,7 +7,7 @@ function jwt_checker(token) {
     //Verify and decode JWT. Validation process is also included.
     var decoded_jwt = null;
     try {
-        decoded_jwt = jwt.verify(token, 'REPLACE_WITH_YOUR_OWN_SECRET_KEY');
+        decoded_jwt = jwt.verify(token, jwt_secret_key);
     }
     catch(err) {
         decoded_jwt = null;
