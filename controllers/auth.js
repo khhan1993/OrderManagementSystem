@@ -31,6 +31,11 @@ function signin(req, res, next) {
                         error_handler.custom_error_handler(400, 'Wrong email or password!', null, next);
                         return;
                     }
+                    //아직 활성화되지 않음
+                    else if(!data.dataValues.is_active) {
+                        error_handler.custom_error_handler(401, 'This account is not activated yet!', null, next);
+                        return;
+                    }
                     //회원 정보 존재
                     else {
                         callback(null, data.dataValues);
