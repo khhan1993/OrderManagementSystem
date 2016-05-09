@@ -24,7 +24,7 @@ function signin(req, res, next) {
     async.series([
         //회원정보 확인
         function(callback) {
-            (models.user).findOne({ where: { email: email, is_active: 1 }})
+            (models.user).findOne({ where: { email: email }})
                 .then(function(data) {
                     //회원 정보 미존재 또는 비밀번호 오류
                     if(!data || !bcrypt.compareSync(password, data.dataValues.password)) {
