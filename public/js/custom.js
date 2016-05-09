@@ -1,9 +1,11 @@
+"use strict";
+
 var OMS = angular.module('OMS', ['ui.router', 'ngRoute', 'ngCookies']);
 
 OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
 
     $urlRouterProvider.otherwise("/");
-    //$locationProvider.html5Mode(true);
+    $locationProvider.html5Mode(true);
 
     $stateProvider
         .state('home', {
@@ -84,6 +86,11 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
             url: '/menu',
             templateUrl: 'template/manage/menu.html',
             controller: 'manageMenuController'
+        })
+        .state('manage.setmenu', {
+            url: '/setmenu',
+            templateUrl: 'template/manage/setmenu.html',
+            controller: 'manageSetMenuController'
         })
         .state('manage.member', {
             url: '/member',
@@ -270,7 +277,30 @@ OMS.controller('orderRequestController', function($scope, $http, $cookies) {
         });
     };
 
-    $scope.getMenuList();
+    $scope.getSetMenuList = function() {
+        $http({
+            method: 'GET',
+            url: '/api/setmenu/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            var setmenu_list_for_convert = response.data.data;
+            for(var i in setmenu_list_for_convert) {
+                setmenu_list_for_convert[i].count = 0;
+            }
+            $scope.setmenu_list = setmenu_list_for_convert;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.getNewList = function() {
+        $scope.getMenuList();
+        $scope.getSetMenuList();
+    };
+
+    $scope.getNewList();
 
     $scope.total_price = 0;
     $scope.table_num = null;
@@ -285,11 +315,25 @@ OMS.controller('orderRequestController', function($scope, $http, $cookies) {
         $scope.total_price += parseInt(menu_obj.price * menu_obj.count);
     };
 
-    $scope.updateMenuCountDirectly = function() {
+    $scope.updateTotalPriceDirectly = function() {
         $scope.total_price = 0;
         for(var i in $scope.menu_list) {
             $scope.total_price += ($scope.menu_list[i].price * $scope.menu_list[i].count);
         }
+        
+        for(var j in $scope.setmenu_list) {
+            $scope.total_price += ($scope.setmenu_list[j].price * $scope.setmenu_list[j].count);
+        }
+    };
+
+    $scope.updateSetMenuCount = function(setmenu_obj, count) {
+        if(count < 0){
+            count = 0;
+        }
+
+        $scope.total_price -= parseInt(setmenu_obj.price * setmenu_obj.count);
+        setmenu_obj.count = count;
+        $scope.total_price += parseInt(setmenu_obj.price * setmenu_obj.count);
     };
 
     $scope.requestOrder = function() {
@@ -302,11 +346,12 @@ OMS.controller('orderRequestController', function($scope, $http, $cookies) {
             data: {
                 group_id: $cookies.get('selected_group'),
                 menus: $scope.menu_list,
+                setmenus: $scope.setmenu_list,
                 table_num: $scope.table_num
             }
         }).then(function successCallback(response) {
             alert("주문 요청이 완료되었습니다.\n주문번호는 " + response.data.data.id + "번 입니다.");
-            $scope.getMenuList();
+            $scope.getNewList();
             $scope.total_price = 0;
             $scope.table_num = null;
         }, function errorCallback(response) {
@@ -342,9 +387,13 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $co
         content_text += "주문 총액: " + data.total_price + "\n";
         content_text += "테이블 번호: " + data.table_num + "\n";
         content_text += "주문 시간: " + $rootScope.getDateTimeText(data.createdAt) + "\n";
-        content_text += "\n[주문 내역]\n";
+        content_text += "\n[일반 주문 내역]\n";
         for(var i in data.content) {
             content_text += data.content[i].name + " " + data.content[i].count + "개\n";
+        }
+        content_text += "\n[세트 주문 내역]\n";
+        for(var i in data.set_content) {
+            content_text += data.set_content[i].name + " " + data.set_content[i].count + "개\n";
         }
         alert(content_text);
     };
@@ -419,9 +468,13 @@ OMS.controller('orderListController', function($rootScope, $scope, $http, $cooki
         content_text += "주문 총액: " + data.total_price + "\n";
         content_text += "테이블 번호: " + data.table_num + "\n";
         content_text += "주문 시간: " + $rootScope.getDateTimeText(data.createdAt) + "\n";
-        content_text += "\n[주문 내역]\n";
+        content_text += "\n[일반 주문 내역]\n";
         for(var i in data.content) {
             content_text += data.content[i].name + " " + data.content[i].count + "개\n";
+        }
+        content_text += "\n[세트 주문 내역]\n";
+        for(var i in data.set_content) {
+            content_text += data.set_content[i].name + " " + data.set_content[i].count + "개\n";
         }
         alert(content_text);
     };
@@ -601,5 +654,110 @@ OMS.controller('manageMenuController', function($scope, $http, $cookies) {
         }, function errorCallback(response) {
             alert(response.data.message);
         });
+    };
+});
+
+OMS.controller('manageSetMenuController', function($scope, $http, $cookies) {
+    
+    $scope.getMenuList = function() {
+        $http({
+            method: 'GET',
+            url: '/api/menu/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            $scope.menu_list = response.data.data;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.getSetMenuList = function() {
+        $http({
+            method: 'GET',
+            url: '/api/setmenu/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            $scope.setmenu_list = response.data.data;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+    
+    $scope.getMenuList();
+    $scope.getSetMenuList();
+
+    $scope.updateSetMenu = function(setmenu_obj, is_active) {
+        $http({
+            method: 'POST',
+            url: '/api/setmenu/update/' + setmenu_obj.id,
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                price: setmenu_obj.price,
+                is_available: is_active
+            }
+        }).then(function successCallback(response) {
+            $scope.getSetMenuList();
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+    
+    $scope.newSetContent = [];
+    $scope.addMenuIntoNewSet = function(menu_obj) {
+        $scope.newSetContent.push(menu_obj);
+    };
+    $scope.clearSetContent = function() {
+        while($scope.newSetContent.length > 0) {
+            $scope.newSetContent.pop();
+        }
+    };
+
+    $scope.addSetMenu = function() {
+        var menu_list = [];
+        for(var i in $scope.newSetContent) {
+            menu_list.push($scope.newSetContent[i].id);
+        }
+
+        $http({
+            method: 'POST',
+            url: '/api/setmenu/create',
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                name: $scope.new_setmenu_name,
+                price: $scope.new_setmenu_price,
+                group_id: $cookies.get('selected_group'),
+                menu_list: menu_list
+            }
+        }).then(function successCallback(response) {
+            $scope.getSetMenuList();
+            $scope.new_setmenu_name = null;
+            $scope.new_setmenu_price = null;
+            $scope.clearSetContent();
+        }, function new_setmenu_price(response) {
+            alert(response.data.message);
+        });
+    };
+    
+    $scope.showSetContent = function(setlist_content) {
+        var set_id_list = JSON.parse(setlist_content);
+        var alert_message = "[세트메뉴 구성 품목]\n";
+
+        for(var i in $scope.menu_list) {
+            for(var j in set_id_list) {
+                if($scope.menu_list[i].id == set_id_list[j]) {
+                    alert_message += $scope.menu_list[i].name + " ";
+                }
+            }
+        }
+        alert_message += "\n";
+        alert(alert_message);
     };
 });

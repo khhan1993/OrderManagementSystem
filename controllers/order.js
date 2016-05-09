@@ -12,7 +12,6 @@ function request(req, res, next) {
 
     //필수 정보 받기.
     var group_id = req.body.group_id;
-    var menus = req.body.menus;
     var table_num = req.body.table_num;
 
     //빈 값이 있는지 확인.
@@ -21,6 +20,10 @@ function request(req, res, next) {
         error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
         return;
     }
+
+    //선택적 정보 받기. (다만, 둘 다 비어있는 것은 reject)
+    var menus = req.body.menus;
+    var set_menus = (!!req.body.setmenus) ? req.body.setmenus : null;
 
     //음이 아닌 정수인지 확인.
     var num_check_list = [group_id, table_num];
@@ -33,9 +36,8 @@ function request(req, res, next) {
     group_id = parseInt(group_id);
     table_num = parseInt(table_num);
 
-    //필요한 정보만 필터링한다.
+    //필요한 정보만 필터링한다. (메뉴 부분)
     var filtered_menu = [];
-    
     for(var i in menus) {
         //메뉴가 잘못된 형식인지 검사한다.
         if(!menus[i].hasOwnProperty('id') || !menus[i].hasOwnProperty('name') || !menus[i].hasOwnProperty('count')) {
@@ -53,10 +55,37 @@ function request(req, res, next) {
         }
     }
 
+    //필요한 정보만 필터링한다. (세트메뉴 부분)
+    var filtered_setmenu = [];
+    for(var i in set_menus) {
+        //세트메뉴의 형식이 올바른지 검사한다.
+        if(!set_menus[i].hasOwnProperty('id') || !set_menus[i].hasOwnProperty('name') || !set_menus[i].hasOwnProperty('count')) {
+            error_handler.custom_error_handler(400, 'Wrong menu request format!', null, next);
+            return;
+        }
+
+        //주문 수량이 있는 경우만 골라서 넣는다.
+        if(set_menus[i].count > 0) {
+            filtered_setmenu.push({
+                id: set_menus[i].id,
+                name: set_menus[i].name,
+                count: set_menus[i].count
+            });
+        }
+    }
+
     //아무것도 주문할 내역이 없는 경우를 필터링.
-    if(filtered_menu.length == 0) {
+    if(filtered_menu.length == 0 && filtered_setmenu.length == 0) {
         error_handler.custom_error_handler(400, 'There is nothing to order!', null, next);
         return;
+    }
+    
+    if(filtered_menu.length == 0) {
+        filtered_menu = null;
+    }
+    
+    if(filtered_setmenu.length == 0) {
+        filtered_setmenu = null;
     }
 
     //주문 테이블에 추가한다.
@@ -84,52 +113,115 @@ function request(req, res, next) {
                 filter_option.push(filtered_menu[i].id);
             }
             
-            (models.menu).findAndCountAll({
-                where: {
-                    group_id: group_id,
-                    id: filter_option
-                },
-                attributes: ['id', 'name', 'price', 'is_available']
-            }).then(function(data) {
-                var result_menus = [];
-                for(var i in data.rows) {
-                    result_menus.push(data.rows[i].dataValues);
-                }
-
-                if(result_menus.length != filtered_menu.length) {
-                    error_handler.custom_error_handler(403, 'GroupID and MenuID mismatch!', null, next);
-                    return;
-                }
-                else {
-                    var deactivated_check = false;
-                    var deactivated_error_message = "These menus are not available now!\nPlease refresh your web page!\n";
-
-                    for(var j in result_menus) {
-                        if(result_menus[j].is_available != 1) {
-                            deactivated_check = true;
-                            deactivated_error_message += "'ID': " + result_menus[j].id + ", 'Name': " + result_menus[j] + "\n";
-                        }
+            if(filter_option.length != 0) {
+                (models.menu).findAndCountAll({
+                    where: {
+                        group_id: group_id,
+                        id: filter_option
+                    },
+                    attributes: ['id', 'name', 'price', 'is_available']
+                }).then(function(data) {
+                    var result_menus = [];
+                    for(var i in data.rows) {
+                        result_menus.push(data.rows[i].dataValues);
                     }
 
-                    if(deactivated_check == true) {
-                        error_handler.custom_error_handler(403, deactivated_error_message, null, next);
+                    if(result_menus.length != filtered_menu.length) {
+                        error_handler.custom_error_handler(403, 'GroupID and MenuID mismatch!', null, next);
                         return;
                     }
                     else {
-                        callback(null, result_menus);
+                        var deactivated_check = false;
+                        var deactivated_error_message = "These menus are not available now!\nPlease refresh your menu list!\n";
+
+                        for(var j in result_menus) {
+                            if(result_menus[j].is_available != 1) {
+                                deactivated_check = true;
+                                deactivated_error_message += "'ID': " + result_menus[j].id + ", 'Name': " + result_menus[j] + "\n";
+                            }
+                        }
+
+                        if(deactivated_check == true) {
+                            error_handler.custom_error_handler(403, deactivated_error_message, null, next);
+                            return;
+                        }
+                        else {
+                            callback(null, result_menus);
+                        }
                     }
-                }
-            }).catch(function(err) { callback(err) });
+                }).catch(function(err) { callback(err) });
+            }
+            else {
+                callback(null, null);
+            }
+        },
+        //요청한 세트메뉴ID에 접근 가능한지 검사한다.
+        function(menu_list, callback) {
+            var filter_option = [];
+            for(var i in filtered_setmenu) {
+                filter_option.push(filtered_setmenu[i].id);
+            }
+
+            if(filter_option.length != 0) {
+                (models.setmenu).findAndCountAll({
+                    where: {
+                        group_id: group_id,
+                        id: filter_option
+                    },
+                    attributes: ['id', 'name', 'price', 'is_available']
+                }).then(function(data) {
+                    var result_setmenus = [];
+                    for(var i in data.rows) {
+                        result_setmenus.push(data.rows[i].dataValues);
+                    }
+
+                    if(result_setmenus.length != filtered_setmenu.length) {
+                        error_handler.custom_error_handler(403, 'GroupID and SetMenuID mismatch!', null, next);
+                        return;
+                    }
+                    else {
+                        var deactivated_check = false;
+                        var deactivated_error_message = "These setmenus are not available now!\nPlease refresh your setmenu list!\n";
+
+                        for(var j in result_setmenus) {
+                            if(result_setmenus[j].is_available != 1) {
+                                deactivated_check = true;
+                                deactivated_error_message += "'ID': " + result_setmenus[j].id + ", 'Name': " + result_setmenus[j] + "\n";
+                            }
+                        }
+
+                        if(deactivated_check == true) {
+                            error_handler.custom_error_handler(403, deactivated_error_message, null, next);
+                            return;
+                        }
+                        else {
+                            callback(null, menu_list, result_setmenus);
+                        }
+                    }
+                }).catch(function(err) { callback(err) });
+            }
+            else {
+                callback(null, menu_list, null);
+            }
         },
         //이제 주문 내용을 테이블에 집어넣는다.
-        function(target_list, callback) {
+        function(menu_list, setmenu_list, callback) {
 
             //TODO: N^2알고리즘인데 수정좀 해보자
             var total_price = 0;
-            for(var i in target_list) {
+            
+            for(var i in menu_list) {
                 for(var j in filtered_menu) {
-                    if(target_list[i].id == filtered_menu[j].id) {
-                        total_price += target_list[i].price * filtered_menu[j].count;
+                    if(menu_list[i].id == filtered_menu[j].id) {
+                        total_price += menu_list[i].price * filtered_menu[j].count;
+                    }
+                }
+            }
+            
+            for(var i in setmenu_list) {
+                for(var j in filtered_setmenu) {
+                    if(setmenu_list[i].id == filtered_setmenu[j].id) {
+                        total_price += setmenu_list[i].price * filtered_setmenu[j].count;
                     }
                 }
             }
@@ -138,6 +230,7 @@ function request(req, res, next) {
                 user_id: decoded_jwt['uid'],
                 group_id: group_id,
                 content: filtered_menu,
+                set_content: filtered_setmenu,
                 total_price: total_price,
                 table_num: table_num
             });
@@ -220,40 +313,84 @@ function confirm(req, res, next) {
         //TODO: Transaction Block required!(이 함수와 다음 함수까지!)
         function(order_obj, callback) {
             if(is_approve == 1) {
+                var order_promise = [];
+
+                //일반 주문의 처리
                 var order_content = JSON.parse(order_obj.dataValues.content);
-                var new_waiting_list = [];
-
                 for(var i in order_content) {
-                    var newWaiting = (models.waiting).build({
-                        group_id: order_obj.dataValues.group_id,
-                        menu_id: order_content[i].id,
-                        amount: order_content[i].count,
-                        table_num: order_obj.dataValues.table_num
-                    });
+                    order_promise.push(new Promise(function(resolve, reject) {
+                        var newWaiting = (models.waiting).build({
+                            group_id: order_obj.dataValues.group_id,
+                            menu_id: order_content[i].id,
+                            amount: order_content[i].count,
+                            table_num: order_obj.dataValues.table_num
+                        });
 
-                    new_waiting_list.push(newWaiting);
+                        newWaiting.save().then(function(data) {
+                            resolve("Normal Finished");
+                        }).catch(function(err) { callback(err) });
+                    }));
                 }
 
-                callback(null, {
-                    list: new_waiting_list,
-                    count: 0
+                var menu_list = [];
+                var setmenu_list = [];
+
+                //세트메뉴 주문의 처리를 위한 데이터 받아오기 작업.
+                var promise_for_set_menu_prepare = new Promise(function(resolve, reject) {
+                    (models.menu).findAndCountAll({ where: { group_id: order_obj.dataValues.group_id }})
+                        .then(function(menu_data) {
+                            for(var i in menu_data.rows) {
+                                menu_list.push(menu_data.rows[i].dataValues);
+                            }
+
+                            (models.setmenu).findAndCountAll({ where: { group_id: order_obj.dataValues.group_id }})
+                                .then(function(setmenu_data) {
+                                    for(var i in setmenu_data.rows) {
+                                        setmenu_list.push(setmenu_data.rows[i].dataValues);
+                                    }
+
+                                    resolve(null);
+                                }).catch(function(err) { callback(err) });
+                        }).catch(function(err) { callback(err) });
+                });
+
+                //세트메뉴 주문의 처리
+                var order_set_content = JSON.parse(order_obj.dataValues.set_content);
+                Promise.all([promise_for_set_menu_prepare]).then(function(values) {
+                    for(var i in order_set_content) {
+                        for(var j in setmenu_list) {
+                            if(order_set_content[i].id == setmenu_list[j].id) {
+                                var list_in_set = JSON.parse(setmenu_list[j].list);
+
+                                for(var x in list_in_set) {
+                                    for(var y in menu_list) {
+                                        if(list_in_set[x] == menu_list[y].id) {
+                                            order_promise.push(new Promise(function(resolve, reject) {
+                                                var newWaiting = (models.waiting).build({
+                                                    group_id: order_obj.dataValues.group_id,
+                                                    menu_id: menu_list[y].id,
+                                                    amount: order_set_content[i].count,
+                                                    table_num: order_obj.dataValues.table_num
+                                                });
+
+                                                newWaiting.save().then(function(data) {
+                                                    resolve("Setmenu Finished");
+                                                }).catch(function(err) { callback(err) });
+                                            }));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Promise.all(order_promise).then(function(values) {
+                        callback(null);
+                    });
                 });
             }
             else {
-                callback(null, null);
-            }
-        },
-        //대기열 삽입 재귀함수
-        function addNewWaitingContent(new_waiting_info, callback) {
-            if(new_waiting_info == null || new_waiting_info.count == new_waiting_info.list.length) {
                 callback(null);
-            }
-            else {
-                new_waiting_info.list[new_waiting_info.count].save()
-                    .then(function() {
-                        new_waiting_info.count += 1;
-                        addNewWaitingContent(new_waiting_info, callback);
-                    }).catch(function(err) { callback(err) });
             }
         }
     ],
@@ -388,6 +525,7 @@ function list(req, res, next) {
                                 user_name: user_list[j].name,
                                 group_id: order_info.order_list[i].group_id,
                                 content: JSON.parse(order_info.order_list[i].content),
+                                set_content: JSON.parse(order_info.order_list[i].set_content),
                                 total_price: order_info.order_list[i].total_price,
                                 table_num: order_info.order_list[i].table_num,
                                 approve_status: order_info.order_list[i].approve_status,

@@ -9,6 +9,7 @@ var error_handler = require('../helper/error_handler');
 var auth = require('../controllers/auth');
 var group = require('../controllers/group');
 var menu = require('../controllers/menu');
+var setmenu = require('../controllers/setmenu');
 var order = require('../controllers/order');
 var statistics = require('../controllers/statistics');
 
@@ -43,6 +44,11 @@ router.get('/group/members/:group_id', group.members);
 router.post('/menu/create', menu.create);
 router.post('/menu/update/:menu_id', menu.update);
 router.get('/menu/list', menu.list);
+
+//세트메뉴와 관련된 Routes.
+router.post('/setmenu/create', setmenu.create);
+router.post('/setmenu/update/:setmenu_id', setmenu.update);
+router.get('/setmenu/list', setmenu.list);
 
 //주문과 관련된 Routes.
 router.post('/order/request', order.request);

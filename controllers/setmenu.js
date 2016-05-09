@@ -14,10 +14,17 @@ function create(req, res, next) {
     var name = req.body.name;
     var price = req.body.price;
     var group_id = req.body.group_id;
+    var menu_list = req.body.menu_list;
 
     //빈 값이 있는지 확인.
-    var checklist = [name, price, group_id];
+    var checklist = [name, price, group_id, menu_list];
     if(value_checker.is_empty_check(checklist)) {
+        error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
+        return;
+    }
+    
+    //메뉴리스트 비어있는지 확인.
+    if(menu_list.length == 0) {
         error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
         return;
     }
@@ -28,12 +35,26 @@ function create(req, res, next) {
         error_handler.custom_error_handler(400, 'GroupID and Price must be integer format!', null, next);
         return;
     }
-    
+
     //숫자는 숫자로 형변환
     price = parseInt(price);
     group_id = parseInt(group_id);
+    for(let i in menu_list) {
+        menu_list[i] = parseInt(menu_list[i]);
+        if(isNaN(menu_list[i])) {
+            error_handler.custom_error_handler(400, 'MenuList element must be integer format!', null, next);
+            return;
+        }
+    }
 
-    //메뉴의 추가 작업을 시작한다.
+    //메뉴 그룹 매칭 확인용 조건 지정
+    var group_match_option_set = new Set();
+    for(let i in menu_list) {
+        group_match_option_set.add(menu_list[i]);
+    }
+    var group_match_option = Array.from(group_match_option_set);
+
+    //세트메뉴의 추가 작업을 시작한다.
     async.series([
         //우선 이 그룹의 멤버인지 여부를 먼저 확인한다.
         function(callback) {
@@ -41,7 +62,7 @@ function create(req, res, next) {
                 .then(function(data) {
                     //미소속인 경우
                     if(!data) {
-                        error_handler.custom_error_handler(403, 'Only member of this group can create menu for this group!', null, next);
+                        error_handler.custom_error_handler(403, 'Only member of this group can create setmenu for this group!', null, next);
                         return;
                     }
                     //소속인 경우
@@ -51,15 +72,33 @@ function create(req, res, next) {
                 })
                 .catch(function(err) { callback(err) });
         },
-        //메뉴를 추가한다
+        //세트메뉴에 추가할 메뉴가 해당 그룹의 메뉴인지 확인한다.
         function(callback) {
-            var newMenu = (models.menu).build({
+            (models.menu).findAndCountAll({
+                where: {
+                    group_id: group_id,
+                    id: group_match_option
+                }
+            }).then(function(data) {
+                if(data.count != group_match_option.length) {
+                    error_handler.custom_error_handler(403, 'GroupID and MenuID mismatch!', null, next);
+                    return;
+                }
+                else {
+                    callback(null);
+                }
+            }).catch(function(err) { callback(err) });
+        },
+        //세트메뉴를 추가한다
+        function(callback) {
+            var newSetMenu = (models.setmenu).build({
                 name: name,
                 price: price,
-                group_id: group_id
+                group_id: group_id,
+                list: menu_list
             });
 
-            newMenu.save().then(function() { callback(null) }).catch(function(err) { callback(err) });
+            newSetMenu.save().then(function() { callback(null) }).catch(function(err) { callback(err) });
         }
     ],
     function(err, results) {
@@ -68,43 +107,43 @@ function create(req, res, next) {
 }
 
 function update(req, res, next) {
-    
+
     //JWT의 decode를 진행한다.
     var decoded_jwt = value_checker.jwt_checker(req.header('Authorization'));
 
     //필수 정보 받기.
-    var menu_id = req.params.menu_id;
+    var setmenu_id = req.params.setmenu_id;
     var price = req.body.price;
     var is_available = (req.body.is_available == 1) ? "1" : "0"; //정수형태로 넣어주면 밑의 empty_check를 통과하지 못함.
 
     //빈 값이 있는지 확인.
-    var checklist = [menu_id, price, is_available];
+    var checklist = [setmenu_id, price, is_available];
     if(value_checker.is_empty_check(checklist)) {
         error_handler.custom_error_handler(400, 'Required value is empty!', null, next);
         return;
     }
 
     //음이 아닌 정수인지 확인.
-    var num_check_list = [price, menu_id];
+    var num_check_list = [price, setmenu_id];
     if(!value_checker.is_positive_integer_check(num_check_list)) {
-        error_handler.custom_error_handler(400, 'MenuID and Price must be integer format!', null, next);
+        error_handler.custom_error_handler(400, 'SetMenuID and Price must be integer format!', null, next);
         return;
     }
-    
+
     //숫자는 숫자로 형변환
-    menu_id = parseInt(menu_id);
+    setmenu_id = parseInt(setmenu_id);
     price = parseInt(price);
     is_available = parseInt(is_available);
-    
+
     //업데이트 진행
     async.waterfall([
         //메뉴 정보를 가져온다.
         function(callback) {
-            (models.menu).findOne({ where: { id: menu_id } })
+            (models.setmenu).findOne({ where: { id: setmenu_id } })
                 .then(function(data) {
                     //메뉴 정보가 없을 경우.
                     if(!data) {
-                        error_handler.custom_error_handler(404, 'Cannot find requested menu!', null, next);
+                        error_handler.custom_error_handler(404, 'Cannot find requested setmenu!', null, next);
                         return;
                     }
                     //메뉴 정보가 있을 경우.
@@ -115,24 +154,24 @@ function update(req, res, next) {
                 .catch(function(err) { callback(err) });
         },
         //해당 메뉴의 수정 권한이 있는지 검사한다.
-        function(menu_obj, callback) {
-            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: menu_obj.dataValues.group_id } })
+        function(setmenu_obj, callback) {
+            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: setmenu_obj.dataValues.group_id } })
                 .then(function(data) {
                     //미소속인 경우
                     if(!data) {
-                        error_handler.custom_error_handler(403, 'Only member of this group can update menu for this group!', null, next);
+                        error_handler.custom_error_handler(403, 'Only member of this group can update setmenu for this group!', null, next);
                         return;
                     }
                     //소속인 경우
                     else {
-                        callback(null, menu_obj);
+                        callback(null, setmenu_obj);
                     }
                 })
                 .catch(function(err) { callback(err) });
         },
         //메뉴 정보를 업데이트한다.
-        function(menu_obj, callback) {
-            menu_obj.updateAttributes({
+        function(setmenu_obj, callback) {
+            setmenu_obj.updateAttributes({
                 price: price,
                 is_available: is_available
             }).then(function(data) {
@@ -166,7 +205,7 @@ function list(req, res, next) {
         error_handler.custom_error_handler(400, 'Price must be integer format!', null, next);
         return;
     }
-    
+
     //숫자 형변환
     group_id = parseInt(group_id);
 
@@ -190,15 +229,15 @@ function list(req, res, next) {
         },
         //리스트를 조회한다.
         function(callback) {
-            (models.menu).findAndCountAll({
+            (models.setmenu).findAndCountAll({
                 where: { group_id: group_id },
-                attributes: ['id', 'name', 'price', 'is_available']
+                attributes: ['id', 'name', 'price', 'is_available', 'list']
             }).then(function(data) {
-                var menu_list = [];
+                var setmenu_list = [];
                 for(var i in data.rows) {
-                    menu_list.push(data.rows[i].dataValues);
+                    setmenu_list.push(data.rows[i].dataValues);
                 }
-                callback(null, menu_list);
+                callback(null, setmenu_list);
             }).catch(function(err) { callback(err) });
         }
     ],
