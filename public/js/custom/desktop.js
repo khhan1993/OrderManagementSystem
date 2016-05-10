@@ -10,91 +10,91 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
     $stateProvider
         .state('home', {
             url: '/',
-            templateUrl: 'template/home.html'
+            templateUrl: 'template/desktop/home.html'
         })
         .state('auth', {
             abstract: true,
             url: '/auth',
-            templateUrl: 'template/auth/base.html'
+            templateUrl: 'template/desktop/auth/base.html'
         })
         .state('auth.signup', {
             url: '/signup',
-            templateUrl: 'template/auth/signup.html',
+            templateUrl: 'template/desktop/auth/signup.html',
             controller: 'signupController'
         })
         .state('auth.signin', {
             url: '/signin',
-            templateUrl: 'template/auth/signin.html',
+            templateUrl: 'template/desktop/auth/signin.html',
             controller: 'signinController'
         })
         .state('group', {
             abstract: true,
             url: '/group',
-            templateUrl: 'template/group/base.html'
+            templateUrl: 'template/desktop/group/base.html'
         })
         .state('group.create', {
             url: '/create',
-            templateUrl: 'template/group/create.html',
+            templateUrl: 'template/desktop/group/create.html',
             controller: 'createGroupController'
         })
         .state('group.info', {
             url: '/info',
-            templateUrl: 'template/group/info.html',
+            templateUrl: 'template/desktop/group/info.html',
             controller: 'getCurrentGroupInfoController'
         })
         .state('group.list', {
             url: '/list',
-            templateUrl: 'template/group/list.html',
+            templateUrl: 'template/desktop/group/list.html',
             controller: 'getEnrolledGroupListController'
         })
         .state('order', {
             abstract: true,
             url: '/order',
-            templateUrl: 'template/order/base.html'
+            templateUrl: 'template/desktop/order/base.html'
         })
         .state('order.request', {
             url: '/create',
-            templateUrl: 'template/order/request.html',
+            templateUrl: 'template/desktop/order/request.html',
             controller: 'orderRequestController'
         })
         .state('order.confirm', {
             url: '/confirm',
-            templateUrl: 'template/order/confirm.html',
+            templateUrl: 'template/desktop/order/confirm.html',
             controller: 'orderConfirmController'
         })
         .state('order.list', {
             url: '/list',
-            templateUrl: 'template/order/list.html',
+            templateUrl: 'template/desktop/order/list.html',
             controller: 'orderListController'
         })
         .state('statistics', {
             abstract: true,
             url: '/statistics',
-            templateUrl: 'template/statistics/base.html'
+            templateUrl: 'template/desktop/statistics/base.html'
         })
         .state('statistics.waiting', {
             url: '/waiting',
-            templateUrl: 'template/statistics/waiting.html',
+            templateUrl: 'template/desktop/statistics/waiting.html',
             controller: 'statisticsWaitingController'
         })
         .state('manage', {
             abstract: true,
             url: '/manage',
-            templateUrl: 'template/manage/base.html'
+            templateUrl: 'template/desktop/manage/base.html'
         })
         .state('manage.menu', {
             url: '/menu',
-            templateUrl: 'template/manage/menu.html',
+            templateUrl: 'template/desktop/manage/menu.html',
             controller: 'manageMenuController'
         })
         .state('manage.setmenu', {
             url: '/setmenu',
-            templateUrl: 'template/manage/setmenu.html',
+            templateUrl: 'template/desktop/manage/setmenu.html',
             controller: 'manageSetMenuController'
         })
         .state('manage.member', {
             url: '/member',
-            templateUrl: 'template/manage/member.html',
+            templateUrl: 'template/desktop/manage/member.html',
             controller: 'manageMemberController'
         });
 });
@@ -227,7 +227,7 @@ OMS.controller('getCurrentGroupInfoController', function($scope, $http, $cookies
     }, function errorCallback(response) {
         alert(response.data.message);
     });
-    
+
 });
 
 OMS.controller('getEnrolledGroupListController', function($scope, $http, $cookies) {
@@ -243,7 +243,7 @@ OMS.controller('getEnrolledGroupListController', function($scope, $http, $cookie
     }, function errorCallback(response) {
         alert(response.data.message);
     });
-    
+
     $scope.selected_group = $cookies.get('selected_group');
 
     $scope.select_group = function(group_id) {
@@ -320,7 +320,7 @@ OMS.controller('orderRequestController', function($scope, $http, $cookies) {
         for(var i in $scope.menu_list) {
             $scope.total_price += ($scope.menu_list[i].price * $scope.menu_list[i].count);
         }
-        
+
         for(var j in $scope.setmenu_list) {
             $scope.total_price += ($scope.setmenu_list[j].price * $scope.setmenu_list[j].count);
         }
@@ -378,7 +378,7 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $co
             alert(response.data.message);
         });
     };
-    
+
     $scope.getPendingList();
 
     $scope.show_order_content = function(data) {
@@ -459,7 +459,7 @@ OMS.controller('orderListController', function($rootScope, $scope, $http, $cooki
             alert(response.data.message);
         });
     };
-    
+
     $scope.getOrderList();
 
     $scope.show_order_content = function(data) {
@@ -512,7 +512,7 @@ OMS.controller('statisticsWaitingController', function($rootScope, $scope, $http
             }
         }).then(function successCallback(response) {
             $scope.menu_list = response.data.data.menu_list;
-            
+
             for(var i in $scope.menu_list) {
                 $scope.menu_list[i].total_count = 0;
                 $scope.menu_list[i].waiting_count = 0;
@@ -532,7 +532,7 @@ OMS.controller('statisticsWaitingController', function($rootScope, $scope, $http
                     }
                 }
             }
-            
+
         }, function errorCallback(response) {
             alert(response.data.message);
         });
@@ -559,7 +559,7 @@ OMS.controller('statisticsWaitingController', function($rootScope, $scope, $http
 });
 
 OMS.controller('manageMemberController', function($scope, $http, $cookies) {
-    
+
     $scope.getMemberList = function() {
         $http({
             method: 'GET',
@@ -573,9 +573,9 @@ OMS.controller('manageMemberController', function($scope, $http, $cookies) {
             alert(response.data.message);
         });
     };
-    
+
     $scope.getMemberList();
-    
+
     $scope.addMember = function() {
         $http({
             method: 'POST',
@@ -658,7 +658,7 @@ OMS.controller('manageMenuController', function($scope, $http, $cookies) {
 });
 
 OMS.controller('manageSetMenuController', function($scope, $http, $cookies) {
-    
+
     $scope.getMenuList = function() {
         $http({
             method: 'GET',
@@ -686,7 +686,7 @@ OMS.controller('manageSetMenuController', function($scope, $http, $cookies) {
             alert(response.data.message);
         });
     };
-    
+
     $scope.getMenuList();
     $scope.getSetMenuList();
 
@@ -707,7 +707,7 @@ OMS.controller('manageSetMenuController', function($scope, $http, $cookies) {
             alert(response.data.message);
         });
     };
-    
+
     $scope.newSetContent = [];
     $scope.addMenuIntoNewSet = function(menu_obj) {
         $scope.newSetContent.push(menu_obj);
@@ -745,7 +745,7 @@ OMS.controller('manageSetMenuController', function($scope, $http, $cookies) {
             alert(response.data.message);
         });
     };
-    
+
     $scope.showSetContent = function(setlist_content) {
         var set_id_list = JSON.parse(setlist_content);
         var alert_message = "[세트메뉴 구성 품목]\n";

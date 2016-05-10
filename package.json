@@ -13,6 +13,7 @@
     "debug": "^2.2.0",
     "express": "^4.13.4",
     "jsonwebtoken": "^5.7.0",
+    "mobile-detect": "^1.3.2",
     "morgan": "^1.7.0",
     "mysql": "^2.10.2",
     "sequelize": "^3.22.0",

@@ -1,0 +1,27 @@
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>그룹 번호</th>
+            <th>그룹 이름</th>
+            <th>선택하기</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="group in group_list" ng-class="(selected_group == group.id) ? 'info': ''">
+            <td>{{group.id}}</td>
+            <td>{{group.name}}</td>
+            <td><a href="" ng-click="select_group(group.id)">선택</a></td>
+        </tr>
+    </tbody>
+</table>
+
+<br>
+
+<form ng-submit="createNewGroup()">
+    <div class="form-group label-floating">
+        <label class="control-label">새 그룹 이름</label>
+        <input class="form-control" type="text" ng-model="new_group_name" ng-required="true">
+    </div>
+
+    <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">생성하기</button>
+</form>

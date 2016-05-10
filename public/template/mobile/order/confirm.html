@@ -1,0 +1,37 @@
+<h3>주문 처리</h3>
+
+<table class="table table-hover table-bordered">
+    <thead>
+        <tr>
+            <th class="text-center">주문번호</th>
+            <th class="text-center">주문 내용</th>
+            <th class="text-center" colspan="2">처리</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="pending in pending_list">
+            <td class="text-center">{{pending.id}}</td>
+            <td class="text-center"><a href="" ng-click="show_order_content(pending)">내용 보기</a></td>
+            <td class="text-center" ng-click="update_pending_data(pending.id, 1)"><a href=""><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a></td>
+            <td class="text-center" ng-click="update_pending_data(pending.id, 0)"><a href=""><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="text-center">
+    <ul class="pagination">
+        <li ng-class="(pagination_info.prev_active) ? '' : 'disabled'">
+            <a href="" ng-click="gotoPrevPage()" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        <li ng-repeat="page in pagination_info.pagination_num_list" ng-class="(pagination_info.current_page == page) ? 'active' : ''">
+            <a href="" ng-click="gotoSpecificPage(page)">{{page}}</a>
+        </li>
+        <li ng-class="(pagination_info.next_active) ? '' : 'disabled'">
+            <a href="" ng-click="gotoNextPage()" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
+</div>

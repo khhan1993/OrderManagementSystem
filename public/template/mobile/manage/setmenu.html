@@ -1,0 +1,61 @@
+<h3>세트메뉴 목록</h3>
+
+<table class="table table-hover table-bordered">
+    <thead>
+    <tr>
+        <th class="text-center" style="width: 50%">이름</th>
+        <th class="text-center" style="width: 30%">가격(<i class="fa fa-krw"></i>)</th>
+        <th class="text-center" style="width: 20%">활성</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="setmenu in setmenu_list">
+        <td class="text-center" style="width: 50%"><a href="" ng-click="showSetContent(setmenu.list)">{{setmenu.name}}</a></td>
+        <td class="text-center" style="width: 30%"><input class="custom-input text-center" type="text" ng-value="setmenu.price" ng-model="setmenu.price" ng-blur="updateSetMenu(setmenu, setmenu.is_available)"></td>
+        <td class="text-center" style="width: 20%">
+            <a href="" ng-click="updateSetMenu(setmenu, 0)"><span class="glyphicon glyphicon-ok" aria-hidden="true" ng-show="(setmenu.is_available == 1)"></span></a>
+            <a href="" ng-click="updateSetMenu(setmenu, 1)"><span class="glyphicon glyphicon-remove" aria-hidden="true" ng-show="(setmenu.is_available == 0)"></span></a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<br>
+
+<form ng-submit="addSetMenu()">
+    <div class="form-group label-floating">
+        <label class="control-label">새 세트메뉴 이름</label>
+        <input class="form-control" type="text" ng-model="new_setmenu_name" ng-required="true">
+    </div>
+
+    <div class="form-group label-floating">
+        <label class="control-label">새 세메뉴 가격</label>
+        <input class="form-control" type="number" ng-model="new_setmenu_price" ng-required="true">
+    </div>
+
+    <div class="form-group">
+        <label>새 세트 구성 (<a href="" ng-click="clearSetContent()">구성 초기화</a>)</label> <br>
+        <span ng-repeat="content in newSetContent track by $index">
+            <span class="label label-default">{{content.name}}</span>
+        </span>
+    </div>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="text-center">메뉴 이름</th>
+                <th class="text-center">메뉴 가격</th>
+                <th class="text-center">추가하기</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="menu in menu_list">
+                <td class="text-center">{{menu.name}}</td>
+                <td class="text-center">{{menu.price}}</td>
+                <td class="text-center"><a href="" ng-click="addMenuIntoNewSet(menu)">구성에 추가</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">추가하기</button>
+</form>
