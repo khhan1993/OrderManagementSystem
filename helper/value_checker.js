@@ -1,13 +1,12 @@
 var jwt = require('jsonwebtoken');
-
-var jwt_secret_key = 'REPLACE_WITH_YOUR_OWN_SECRET_KEY';
+var fs = require('fs');
 
 function jwt_checker(token) {
 
     //Verify and decode JWT. Validation process is also included.
     var decoded_jwt = null;
     try {
-        decoded_jwt = jwt.verify(token, jwt_secret_key);
+        decoded_jwt = jwt.verify(token, fs.readFileSync(__dirname + '/../ssl/server.crt'));
     }
     catch(err) {
         decoded_jwt = null;
@@ -79,7 +78,6 @@ function get_pagination_info(page_num, contents_per_page, total_num_of_contents)
     };
 }
 
-exports.jwt_secret_key = jwt_secret_key;
 exports.jwt_checker = jwt_checker;
 exports.is_empty_check = is_empty_check;
 exports.is_positive_integer_check = is_positive_integer_check;

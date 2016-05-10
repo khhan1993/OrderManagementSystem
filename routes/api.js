@@ -3,6 +3,7 @@
 var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
+var fs = require('fs');
 var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
 
@@ -22,7 +23,7 @@ router.post('/auth/signin', auth.signin);
 router.all('*', function(req, res, next) {
   var decoded_jwt = null;
   try {
-    decoded_jwt = jwt.verify(req.header('Authorization'), value_checker.jwt_secret_key);
+    decoded_jwt = jwt.verify(req.header('Authorization'), fs.readFileSync(__dirname + '/../ssl/server.crt'));
   }
   catch(err) {
     error_handler.custom_error_handler(401, err.message, err, next);

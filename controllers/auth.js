@@ -6,6 +6,7 @@ var bcrypt = require('bcrypt');
 var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
 var models = require('../models');
+var fs = require('fs');
 
 function signin(req, res, next) {
 
@@ -45,6 +46,7 @@ function signin(req, res, next) {
         }
     ],
     function(err, results) {
+        
         //Generate JWT
         var token = jwt.sign({
             uid: results[0].id,
@@ -52,8 +54,9 @@ function signin(req, res, next) {
             email: results[0].email,
             ip_address: req.ip,
             user_agent: req.headers['user-agent']
-        }, value_checker.jwt_secret_key, {
-            expiresIn: "12h"
+        }, fs.readFileSync(__dirname + '/../ssl/server.key'), {
+            expiresIn: "12h",
+            algorithm: 'RS256'
         });
 
         error_handler.async_final(err, res, next, token);

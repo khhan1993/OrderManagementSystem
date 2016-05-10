@@ -35,19 +35,22 @@ function create(req, res, next) {
 
     //메뉴의 추가 작업을 시작한다.
     async.series([
-        //우선 이 그룹의 멤버인지 여부를 먼저 확인한다.
+        //우선 Group의 creator인지를 확인한다.
         function(callback) {
-            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: group_id } })
+            (models.group).findOne({ where: { id: group_id } })
                 .then(function(data) {
-                    //미소속인 경우
                     if(!data) {
-                        error_handler.custom_error_handler(403, 'Only member of this group can create menu for this group!', null, next);
+                        error_handler.custom_error_handler(404, 'Cannot get requested group info!', null, next);
                         return;
                     }
-                    //소속인 경우
+                    else if(data.dataValues.creator != decoded_jwt['uid']) {
+                        error_handler.custom_error_handler(403, 'You are not a creator of this group!', null, next);
+                        return;
+                    }
                     else {
                         callback(null);
                     }
+
                 })
                 .catch(function(err) { callback(err) });
         },
@@ -114,19 +117,22 @@ function update(req, res, next) {
                 })
                 .catch(function(err) { callback(err) });
         },
-        //해당 메뉴의 수정 권한이 있는지 검사한다.
+        //Group의 creator인지를 확인한다.
         function(menu_obj, callback) {
-            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: menu_obj.dataValues.group_id } })
+            (models.group).findOne({ where: { id: menu_obj.dataValues.group_id } })
                 .then(function(data) {
-                    //미소속인 경우
                     if(!data) {
-                        error_handler.custom_error_handler(403, 'Only member of this group can update menu for this group!', null, next);
+                        error_handler.custom_error_handler(404, 'Cannot get requested group info!', null, next);
                         return;
                     }
-                    //소속인 경우
+                    else if(data.dataValues.creator != decoded_jwt['uid']) {
+                        error_handler.custom_error_handler(403, 'You are not a creator of this group!', null, next);
+                        return;
+                    }
                     else {
                         callback(null, menu_obj);
                     }
+
                 })
                 .catch(function(err) { callback(err) });
         },
