@@ -286,17 +286,22 @@ function confirm(req, res, next) {
                 })
                 .catch(function(err) { callback(err) });
         },
-        //해당 주문에 해당하는 그룹원인지 확인한다.
+        //해당 주문에 해당하는 그룹의 creator인지 확인한다.
         function(order_obj, callback) {
-            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: order_obj.dataValues.group_id } })
+            (models.group).findOne({ where: { id: order_obj.dataValues.group_id } })
                 .then(function(data) {
                     if(!data) {
-                        error_handler.custom_error_handler(403, 'Only member of this group can confirm order!', null, next);
+                        error_handler.custom_error_handler(404, 'Cannot get requested group info!', null, next);
+                        return;
+                    }
+                    else if(data.dataValues.creator != decoded_jwt['uid']) {
+                        error_handler.custom_error_handler(403, 'You are not a creator of this group!', null, next);
                         return;
                     }
                     else {
                         callback(null, order_obj);
                     }
+
                 })
                 .catch(function(err) { callback(err) });
         },

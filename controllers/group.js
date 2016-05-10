@@ -147,10 +147,14 @@ function join(req, res, next) {
     async.waterfall([
         //우선 Group의 creator인지를 확인한다.
         function(callback) {
-            (models.group).findOne({ where: { id: group_id, creator: decoded_jwt['uid'] } })
+            (models.group).findOne({ where: { id: group_id } })
                 .then(function(data) {
                     if(!data) {
                         error_handler.custom_error_handler(404, 'Cannot get requested group info!', null, next);
+                        return;
+                    }
+                    else if(data.dataValues.creator != decoded_jwt['uid']) {
+                        error_handler.custom_error_handler(403, 'You are not a creator of this group!', null, next);
                         return;
                     }
                     else {
