@@ -1,12 +1,14 @@
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
 
+var ssl_cert = fs.readFileSync(__dirname + '/../ssl/server.crt');
+
 function jwt_checker(token) {
 
     //Verify and decode JWT. Validation process is also included.
     var decoded_jwt = null;
     try {
-        decoded_jwt = jwt.verify(token, fs.readFileSync(__dirname + '/../ssl/server.crt'));
+        decoded_jwt = jwt.verify(token, ssl_cert);
     }
     catch(err) {
         decoded_jwt = null;
