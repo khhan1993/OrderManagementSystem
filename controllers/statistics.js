@@ -3,7 +3,7 @@
 var async = require('async');
 var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
-var models = require('../models');
+var app = require('../app');
 
 function waiting_list(req, res, next) {
 
@@ -34,45 +34,48 @@ function waiting_list(req, res, next) {
     async.series([
         //그룹 접근 가능 여부 조회
         function(callback) {
-            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: group_id } })
-                .then(function(data) {
-                    //미소속인 경우
-                    if(!data) {
+            let queryStr = "SELECT * FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
+            let queryVal = [decoded_jwt['uid'], group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
                         error_handler.custom_error_handler(403, 'Only member of this group can get list of waitings!', null, next);
                         return;
                     }
-                    //소속인 경우
                     else {
                         callback(null);
                     }
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //그룹 메뉴 정보 조회
         function(callback) {
-            (models.menu).findAndCountAll({ where: { group_id: group_id } })
-                .then(function(data) {
-                    var menu_list = [];
-                    for(var i in data.rows) {
-                        menu_list.push(data.rows[i].dataValues);
-                    }
-                    
-                    callback(null, menu_list);
-                })
-                .catch(function(err) { callback(err) });
+            let queryStr = "SELECT * FROM `menus` WHERE `group_id` = ?";
+            let queryVal = [group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    callback(null, rows);
+                }
+            });
         },
         //대기열 조회(상태 관계없이 전부 조회하며 상태별 처리는 클라이언트에서 진행)
         function(callback) {
-            (models.waiting).findAndCountAll({ where: { group_id: group_id } })
-                .then(function(data) {
-                    var waiting_list = [];
-                    for(var i in data.rows) {
-                        waiting_list.push(data.rows[i].dataValues);
-                    }
-
-                    callback(null, waiting_list);
-                })
-                .catch(function(err) { callback(err) });
+            let queryStr = "SELECT * FROM `waitings` WHERE `group_id` = ?";
+            let queryVal = [group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    callback(null, rows);
+                }
+            });
         }
     ],
     function(err, results) {
@@ -112,40 +115,54 @@ function clear_waiting(req, res, next) {
     async.waterfall([
         //waiting 정보를 조회
         function(callback) {
-            (models.waiting).findOne({ where: { id: waiting_id } })
-                .then(function(data) {
-                    if(!data) {
-                        
+            let queryStr = "SELECT * FROM `waitings` WHERE `id` = ?";
+            let queryVal = [waiting_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
+                        error_handler.custom_error_handler(404, 'Cannot find requested waiting information!', null, next);
+                        return;
                     }
                     else {
-                        callback(null, data);
+                        callback(null, rows[0]);
                     }
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //접근 가능한 group인지 확인.
-        function(waiting_obj, callback) {
-            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: waiting_obj.dataValues.group_id } })
-                .then(function(data) {
-                    //미소속인 경우
-                    if(!data) {
+        function(waiting_data, callback) {
+            let queryStr = "SELECT * FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
+            let queryVal = [decoded_jwt['uid'], waiting_data.group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
                         error_handler.custom_error_handler(403, 'Only member of this group can clear this waiting info!', null, next);
                         return;
                     }
-                    //소속인 경우
                     else {
-                        callback(null, waiting_obj);
+                        callback(null, waiting_data);
                     }
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //Waiting 상태를 변경한다.
-        function(waiting_obj, callback) {
-            waiting_obj.updateAttributes({
-                is_served: 1
-            }).then(function() {
-                callback(null);
-            }).catch(function(err) { callback(err) });
+        function(waiting_data, callback) {
+            let queryStr = "UPDATE `waitings` SET `is_served` = 1, `updatedAt` = ? WHERE `id` = ?";
+            let queryVal = [new Date(), waiting_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    callback(null);
+                }
+            });
         }
     ],
     function(err, results) {

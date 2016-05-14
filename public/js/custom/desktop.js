@@ -350,7 +350,7 @@ OMS.controller('orderRequestController', function($scope, $http, $cookies) {
                 table_num: $scope.table_num
             }
         }).then(function successCallback(response) {
-            alert("주문 요청이 완료되었습니다.\n주문번호는 " + response.data.data.id + "번 입니다.");
+            alert("주문 요청이 완료되었습니다.\n주문번호는 " + response.data.data + "번 입니다.");
             $scope.getNewList();
             $scope.total_price = 0;
             $scope.table_num = null;

@@ -6,145 +6,134 @@
 
 "use strict";
 
-var express = require('../app');
+var express = require('../app').express;
 var debug = require('debug')('OMS:server');
 var https = require('https');
 var http = require('http');
 var fs = require('fs');
 
 
-/* DB연결을 수행한다. (호출을 통해 초기화 작업의 역할을 한다.)
- * DB연결 후 웹서버를 시작한다.
+/**
+ * Create HTTP, HTTPS server.
  */
-var models = require('../models');
-models.sequelize.sync().then(function() {
 
-  /**
-   * Create HTTP, HTTPS server.
-   */
+var httpServer = http.createServer(express);
+var httpsServer = https.createServer({
+  key: fs.readFileSync(__dirname + '/../ssl/server.key'),
+  cert: fs.readFileSync(__dirname + '/../ssl/server.crt')
+}, express);
 
-  var httpServer = http.createServer(express);
-  var httpsServer = https.createServer({
-    key: fs.readFileSync(__dirname + '/../ssl/server.key'),
-    cert: fs.readFileSync(__dirname + '/../ssl/server.crt')
-  }, express);
+/**
+ * Listen on provided port, on all network interfaces.
+ */
 
-  /**
-   * Listen on provided port, on all network interfaces.
-   */
+var httpPort = normalizePort('3080');
+var httpsPort = normalizePort('3443');
 
-  var httpPort = normalizePort('3080');
-  var httpsPort = normalizePort('3443');
+httpServer.listen(normalizePort(httpPort));
+httpServer.on('error', onErrorHttp);
+httpServer.on('listening', onListeningHttp);
 
-  httpServer.listen(normalizePort(httpPort));
-  httpServer.on('error', onErrorHttp);
-  httpServer.on('listening', onListeningHttp);
+httpsServer.listen(normalizePort(httpsPort));
+httpsServer.on('error', onErrorHttps);
+httpsServer.on('listening', onListeningHttps);
 
-  httpsServer.listen(normalizePort(httpsPort));
-  httpsServer.on('error', onErrorHttps);
-  httpsServer.on('listening', onListeningHttps);
+/**
+ * Normalize a port into a number, string, or false.
+ */
 
-  /**
-   * Normalize a port into a number, string, or false.
-   */
+function normalizePort(val) {
+  var port = parseInt(val, 10);
 
-  function normalizePort(val) {
-    var port = parseInt(val, 10);
-
-    if (isNaN(port)) {
-      // named pipe
-      return val;
-    }
-
-    if (port >= 0) {
-      // port number
-      return port;
-    }
-
-    return false;
+  if (isNaN(port)) {
+    // named pipe
+    return val;
   }
 
-  /**
-   * Event listener for HTTP server "error" event.
-   */
+  if (port >= 0) {
+    // port number
+    return port;
+  }
 
-  function onErrorHttp(error) {
-    if (error.syscall !== 'listen') {
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onErrorHttp(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof httpPort === 'string'
+      ? 'Pipe ' + httpPort
+      : 'Port ' + httpPort;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
       throw error;
-    }
+  }
+}
 
-    var bind = typeof httpPort === 'string'
-        ? 'Pipe ' + httpPort
-        : 'Port ' + httpPort;
+/**
+ * Event listener for HTTPS server "error" event.
+ */
 
-    // handle specific listen errors with friendly messages
-    switch (error.code) {
-      case 'EACCES':
-        console.error(bind + ' requires elevated privileges');
-        process.exit(1);
-        break;
-      case 'EADDRINUSE':
-        console.error(bind + ' is already in use');
-        process.exit(1);
-        break;
-      default:
-        throw error;
-    }
+function onErrorHttps(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
   }
 
-  /**
-   * Event listener for HTTPS server "error" event.
-   */
+  var bind = typeof httpsPort === 'string'
+      ? 'Pipe ' + httpsPort
+      : 'Port ' + httpsPort;
 
-  function onErrorHttps(error) {
-    if (error.syscall !== 'listen') {
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
       throw error;
-    }
-
-    var bind = typeof httpsPort === 'string'
-        ? 'Pipe ' + httpsPort
-        : 'Port ' + httpsPort;
-
-    // handle specific listen errors with friendly messages
-    switch (error.code) {
-      case 'EACCES':
-        console.error(bind + ' requires elevated privileges');
-        process.exit(1);
-        break;
-      case 'EADDRINUSE':
-        console.error(bind + ' is already in use');
-        process.exit(1);
-        break;
-      default:
-        throw error;
-    }
   }
+}
 
-  /**
-   * Event listener for HTTP server "listening" event.
-   */
+/**
+ * Event listener for HTTP server "listening" event.
+ */
 
-  function onListeningHttp() {
-    var addr = httpServer.address();
-    var bind = typeof addr === 'string'
-        ? 'pipe ' + addr
-        : 'port ' + addr.port;
-    debug('Listening on ' + bind);
-  }
+function onListeningHttp() {
+  var addr = httpServer.address();
+  var bind = typeof addr === 'string'
+      ? 'pipe ' + addr
+      : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
 
-  /**
-   * Event listener for HTTP server "listening" event.
-   */
+/**
+ * Event listener for HTTP server "listening" event.
+ */
 
-  function onListeningHttps() {
-    var addr = httpsServer.address();
-    var bind = typeof addr === 'string'
-        ? 'pipe ' + addr
-        : 'port ' + addr.port;
-    debug('Listening on ' + bind);
-  }
-}).catch(function(err) {
-  console.error("Can't connect to DB server!");
-  console.error(err);
-  process.exit(-1);
-});
+function onListeningHttps() {
+  var addr = httpsServer.address();
+  var bind = typeof addr === 'string'
+      ? 'pipe ' + addr
+      : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}

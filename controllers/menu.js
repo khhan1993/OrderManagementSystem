@@ -3,7 +3,7 @@
 var async = require('async');
 var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
-var models = require('../models');
+var app = require('../app');
 
 function create(req, res, next) {
 
@@ -37,32 +37,45 @@ function create(req, res, next) {
     async.series([
         //우선 Group의 creator인지를 확인한다.
         function(callback) {
-            (models.group).findOne({ where: { id: group_id } })
-                .then(function(data) {
-                    if(!data) {
+            let queryStr = "SELECT * FROM `groups` WHERE `id` = ?";
+            let queryVal = [group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
                         error_handler.custom_error_handler(404, 'Cannot get requested group info!', null, next);
                         return;
                     }
-                    else if(data.dataValues.creator != decoded_jwt['uid']) {
+                    else if(rows[0].creator != decoded_jwt['uid']) {
                         error_handler.custom_error_handler(403, 'You are not a creator of this group!', null, next);
                         return;
                     }
                     else {
                         callback(null);
                     }
-
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //메뉴를 추가한다
         function(callback) {
-            var newMenu = (models.menu).build({
+            let queryStr = "INSERT INTO `menus` SET ?";
+            let queryVal = {
                 name: name,
                 price: price,
-                group_id: group_id
+                group_id: group_id,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    callback(null);
+                }
             });
-
-            newMenu.save().then(function() { callback(null) }).catch(function(err) { callback(err) });
         }
     ],
     function(err, results) {
@@ -103,47 +116,58 @@ function update(req, res, next) {
     async.waterfall([
         //메뉴 정보를 가져온다.
         function(callback) {
-            (models.menu).findOne({ where: { id: menu_id } })
-                .then(function(data) {
-                    //메뉴 정보가 없을 경우.
-                    if(!data) {
+            let queryStr = "SELECT * FROM `menus` WHERE `id` = ?";
+            let queryVal = [menu_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
                         error_handler.custom_error_handler(404, 'Cannot find requested menu!', null, next);
                         return;
                     }
-                    //메뉴 정보가 있을 경우.
                     else {
-                        callback(null, data);
+                        callback(null, rows[0]);
                     }
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //Group의 creator인지를 확인한다.
-        function(menu_obj, callback) {
-            (models.group).findOne({ where: { id: menu_obj.dataValues.group_id } })
-                .then(function(data) {
-                    if(!data) {
+        function(menu_data, callback) {
+            let queryStr = "SELECT * FROM `groups` WHERE `id` = ?";
+            let queryVal = [menu_data.group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
                         error_handler.custom_error_handler(404, 'Cannot get requested group info!', null, next);
                         return;
                     }
-                    else if(data.dataValues.creator != decoded_jwt['uid']) {
+                    else if(rows[0].creator != decoded_jwt['uid']) {
                         error_handler.custom_error_handler(403, 'You are not a creator of this group!', null, next);
                         return;
                     }
                     else {
-                        callback(null, menu_obj);
+                        callback(null, menu_data);
                     }
-
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //메뉴 정보를 업데이트한다.
-        function(menu_obj, callback) {
-            menu_obj.updateAttributes({
-                price: price,
-                is_available: is_available
-            }).then(function(data) {
-                callback(null);
-            }).catch(function(err) { callback(err) });
+        function(menu_data, callback) {
+            let queryStr = "UPDATE `menus` SET `price` = ?, `is_available` = ?, `updatedAt` = ? WHERE `id` = ?";
+            let queryVal = [price, is_available, new Date(), menu_data.id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    callback(null);
+                }
+            });
         }
     ],
     function(err, results) {
@@ -180,32 +204,35 @@ function list(req, res, next) {
     async.series([
         //우선 이 그룹의 멤버인지 여부를 먼저 확인한다.
         function(callback) {
-            (models.member).findOne({ where: { user_id: decoded_jwt['uid'], group_id: group_id } })
-                .then(function(data) {
-                    //미소속인 경우
-                    if(!data) {
+            let queryStr = "SELECT * FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
+            let queryVal = [decoded_jwt['uid'], group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
                         error_handler.custom_error_handler(403, 'Only member of this group can create menu for this group!', null, next);
                         return;
                     }
-                    //소속인 경우
                     else {
                         callback(null);
                     }
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //리스트를 조회한다.
         function(callback) {
-            (models.menu).findAndCountAll({
-                where: { group_id: group_id },
-                attributes: ['id', 'name', 'price', 'is_available']
-            }).then(function(data) {
-                var menu_list = [];
-                for(var i in data.rows) {
-                    menu_list.push(data.rows[i].dataValues);
+            let queryStr = "SELECT `id`, `name`, `price`, `is_available` FROM `menus` WHERE `group_id` = ?";
+            let queryVal = [group_id];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
                 }
-                callback(null, menu_list);
-            }).catch(function(err) { callback(err) });
+                else {
+                    callback(null, rows);
+                }
+            });
         }
     ],
     function(err, results) {
