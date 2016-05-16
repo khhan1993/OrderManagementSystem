@@ -364,6 +364,9 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $co
             content_text += data.set_content[i].name + " " + data.set_content[i].count + "개\n";
         }
         alert(content_text);
+
+        data.content = JSON.stringify(data.content);
+        data.set_content = JSON.stringify(data.set_content);
     };
 
     $scope.update_pending_data = function(order_id, approve_status) {
@@ -454,6 +457,9 @@ OMS.controller('orderListController', function($rootScope, $scope, $http, $cooki
             content_text += data.set_content[i].name + " " + data.set_content[i].count + "개\n";
         }
         alert(content_text);
+
+        data.content = JSON.stringify(data.content);
+        data.set_content = JSON.stringify(data.set_content);
     };
 
     $scope.gotoPrevPage = function() {
