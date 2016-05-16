@@ -525,7 +525,7 @@ function list(req, res, next) {
                     queryVal.push(decoded_jwt['uid']);
                 }
 
-                if(show_only_pending = 1) {
+                if(show_only_pending == 1) {
                     queryStr += " AND `approve_status` IS NULL";
                 }
 
