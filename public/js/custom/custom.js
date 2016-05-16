@@ -105,7 +105,11 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
         });
 });
 
+var autoRefreshTime = 10000;
+var stopRefreshCheck = 500;
+
 OMS.controller('navbarController', function($rootScope, $scope, $http, $cookies, $state, $interval) {
+
     //로그인 상태를 감지하고 실시간으로 반영하기 위한 것이다.
     var authStateTrack = $interval(function() {
         $rootScope.is_authenticated = (!!$cookies.get('access_token'));
@@ -143,6 +147,11 @@ OMS.controller('navbarController', function($rootScope, $scope, $http, $cookies,
     };
 
     $rootScope.getDateTimeText = function(dateObj) {
+
+        if(dateObj == null) {
+            return "-";
+        }
+
         var target_date = new Date(dateObj);
 
         var year = target_date.getFullYear();
@@ -388,14 +397,14 @@ OMS.controller('orderRequestController', function($scope, $http, $state, $cookie
         }, function errorCallback(response) {
             alert(response.data.message);
         });
-    }, 20000);
+    }, autoRefreshTime * 2);
 
     var stopRefreshCheck = $interval(function() {
         if(!$state.is('order.request')) {
             $interval.cancel(autoRefresh);
             $interval.cancel(stopRefreshCheck);
         }
-    }, 500);
+    }, stopRefreshCheck);
 
     $scope.total_price = 0;
     $scope.table_num = null;
@@ -466,14 +475,14 @@ OMS.controller('orderConfirmController', function($rootScope, $scope, $http, $co
 
     var autoRefresh = $interval(function() {
         $scope.getPendingList();
-    }, 20000);
+    }, autoRefreshTime);
 
     var stopRefreshCheck = $interval(function() {
         if(!$state.is('order.confirm')) {
             $interval.cancel(autoRefresh);
             $interval.cancel(stopRefreshCheck);
         }
-    }, 500);
+    }, stopRefreshCheck);
 
     $scope.show_order_content = function(data) {
         var content_text = "주문번호: " + data.id + "\n";
@@ -570,14 +579,14 @@ OMS.controller('orderListController', function($rootScope, $scope, $http, $cooki
 
     var autoRefresh = $interval(function() {
         $scope.getOrderList();
-    }, 20000);
+    }, autoRefreshTime);
 
     var stopRefreshCheck = $interval(function() {
         if(!$state.is('order.list')) {
             $interval.cancel(autoRefresh);
             $interval.cancel(stopRefreshCheck);
         }
-    }, 500);
+    }, stopRefreshCheck);
 
     $scope.show_order_content = function(data) {
         var content_text = "주문번호: " + data.id + "\n";
@@ -674,14 +683,14 @@ OMS.controller('statisticsWaitingController', function($rootScope, $scope, $http
 
     var autoRefresh = $interval(function() {
         $scope.getWaitingList();
-    }, 20000);
+    }, autoRefreshTime);
 
     var stopRefreshCheck = $interval(function() {
         if(!$state.is('statistics.waiting')) {
             $interval.cancel(autoRefresh);
             $interval.cancel(stopRefreshCheck);
         }
-    }, 500);
+    }, stopRefreshCheck);
 
     $scope.update_waiting_status = function(menu_data, waiting_data) {
         if(waiting_data.id == null)
