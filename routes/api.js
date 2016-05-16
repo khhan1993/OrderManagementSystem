@@ -8,6 +8,7 @@ var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
 
 var auth = require('../controllers/auth');
+var user = require('../controllers/user');
 var group = require('../controllers/group');
 var menu = require('../controllers/menu');
 var setmenu = require('../controllers/setmenu');
@@ -34,11 +35,13 @@ router.all('*', function(req, res, next) {
   next();
 });
 
+//유저와 관련된 Routes.
+router.get('/user/myinfo', user.myinfo);
+
 //그룹과 관련된 Routes.
 router.post('/group/create', group.create);
 router.get('/group/info/:group_id', group.info);
 router.post('/group/join', group.join);
-router.post('/group/left', group.left);
 router.get('/group/list', group.list);
 router.get('/group/members/:group_id', group.members);
 

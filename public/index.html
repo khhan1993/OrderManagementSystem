@@ -43,7 +43,6 @@
     <link rel="stylesheet" href="vendor/bootstrap-material-design/css/bootstrap-material-design.min.css">
     <link rel="stylesheet" href="vendor/bootstrap-material-design/css/ripples.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.1/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.2.6/css/simple-line-icons.min.css">
 
     <!-- Theme Custom CSS -->
     <link rel="stylesheet" href="css/custom/custom.css">
@@ -69,6 +68,7 @@
                             <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li><a ui-sref="group.list_and_create">그룹 리스트 / 새 그룹 생성</a></li>
+                            <li><a ui-sref="group.info" ng-show="is_authenticated && is_group_selected">그룹 정보</a></li>
                         </ul>
                     </li>
                     <li class="dropdown" ui-sref-active="active" ng-show="is_authenticated && is_group_selected">
@@ -107,7 +107,7 @@
 
     <div ng-controller="navbarController">
         <p class="text-center text-muted" ng-show="is_authenticated"><a>{{decoded_token.email}}</a>님 환영합니다.</p>
-        <p class="text-center text-muted" ng-show="is_authenticated"><a>내 정보</a> | <a href="" ng-click="signout()">로그아웃</a></p>
+        <p class="text-center text-muted" ng-show="is_authenticated"><a href="" ui-sref="me.info">내 정보</a> | <a href="" ng-click="signout()">로그아웃</a></p>
         <p class="text-center text-muted"><strong>© 2016 한양대학교 한기훈</strong></p>
         <p class="text-center text-muted">Special thanks to <a href="https://www.facebook.com/HYUALOHA">한양대학교 ALOHA</a></p>
     </div>
