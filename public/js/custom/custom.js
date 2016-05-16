@@ -322,8 +322,9 @@ OMS.controller('orderRequestController', function($scope, $http, $state, $cookie
             }
         }).then(function successCallback(response) {
             var menu_list_for_convert = response.data.data;
-            for(let i in menu_list_for_convert) {
-                menu_list_for_convert[i].count = 0;
+
+            for(var j in menu_list_for_convert) {
+                menu_list_for_convert[j].count = 0;
             }
 
             if($scope.menu_list.length != menu_list_for_convert.length) {
@@ -332,8 +333,8 @@ OMS.controller('orderRequestController', function($scope, $http, $state, $cookie
             else {
                 var length = menu_list_for_convert.length;
 
-                for(let i = 0; i < length; i++) {
-                    let check = true;
+                for(var i = 0; i < length; i++) {
+                    var check = true;
                     check = ($scope.menu_list[i].id == menu_list_for_convert[i].id);
                     check = ($scope.menu_list[i].name == menu_list_for_convert[i].name);
                     check = ($scope.menu_list[i].price == menu_list_for_convert[i].price);
@@ -357,8 +358,8 @@ OMS.controller('orderRequestController', function($scope, $http, $state, $cookie
             }
         }).then(function successCallback(response) {
             var setmenu_list_for_convert = response.data.data;
-            for(var i in setmenu_list_for_convert) {
-                setmenu_list_for_convert[i].count = 0;
+            for(var j in setmenu_list_for_convert) {
+                setmenu_list_for_convert[j].count = 0;
             }
 
             if($scope.setmenu_list.length != setmenu_list_for_convert.length) {
@@ -367,8 +368,8 @@ OMS.controller('orderRequestController', function($scope, $http, $state, $cookie
             else {
                 var length = setmenu_list_for_convert.length;
 
-                for(let i = 0; i < length; i++) {
-                    let check = true;
+                for(var i = 0; i < length; i++) {
+                    var check = true;
                     check = ($scope.setmenu_list[i].id == setmenu_list_for_convert[i].id);
                     check = ($scope.setmenu_list[i].name == setmenu_list_for_convert[i].name);
                     check = ($scope.setmenu_list[i].price == setmenu_list_for_convert[i].price);
