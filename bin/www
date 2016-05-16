@@ -9,34 +9,15 @@
 var express = require('../app').express;
 var debug = require('debug')('OMS:server');
 var https = require('https');
-var http = require('http');
+//var http = require('http');
 var fs = require('fs');
+var cluster = require('cluster');
+var numCPUs = require('os').cpus().length;
 
+//SSL files
+var privateKey = fs.readFileSync(__dirname + '/../ssl/server.key');
+var sslCertificate = fs.readFileSync(__dirname + '/../ssl/server.crt');
 
-/**
- * Create HTTP, HTTPS server.
- */
-
-var httpServer = http.createServer(express);
-var httpsServer = https.createServer({
-  key: fs.readFileSync(__dirname + '/../ssl/server.key'),
-  cert: fs.readFileSync(__dirname + '/../ssl/server.crt')
-}, express);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-var httpPort = normalizePort('3080');
-var httpsPort = normalizePort('3443');
-
-httpServer.listen(normalizePort(httpPort));
-httpServer.on('error', onErrorHttp);
-httpServer.on('listening', onListeningHttp);
-
-httpsServer.listen(normalizePort(httpsPort));
-httpsServer.on('error', onErrorHttps);
-httpsServer.on('listening', onListeningHttps);
 
 /**
  * Normalize a port into a number, string, or false.
@@ -61,7 +42,7 @@ function normalizePort(val) {
 /**
  * Event listener for HTTP server "error" event.
  */
-
+/*
 function onErrorHttp(error) {
   if (error.syscall !== 'listen') {
     throw error;
@@ -85,6 +66,7 @@ function onErrorHttp(error) {
       throw error;
   }
 }
+*/
 
 /**
  * Event listener for HTTPS server "error" event.
@@ -117,7 +99,7 @@ function onErrorHttps(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-
+/*
 function onListeningHttp() {
   var addr = httpServer.address();
   var bind = typeof addr === 'string'
@@ -125,6 +107,7 @@ function onListeningHttp() {
       : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+*/
 
 /**
  * Event listener for HTTP server "listening" event.
@@ -136,4 +119,44 @@ function onListeningHttps() {
       ? 'pipe ' + addr
       : 'port ' + addr.port;
   debug('Listening on ' + bind);
+}
+
+
+//Cluster를 이용하여 멀티코어 처리를 한다.
+if(cluster.isMaster) {
+  for(var i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', function(worker, code, signal) {
+    console.log('worker ' + worker.process.pid + ' died');
+  });
+}
+else {
+  /**
+   * Create HTTP, HTTPS server.
+   */
+
+  //var httpServer = http.createServer(express);
+  var httpsServer = https.createServer({
+    key: privateKey,
+    cert: sslCertificate
+  }, express);
+
+  /**
+   * Listen on provided port, on all network interfaces.
+   */
+
+  //var httpPort = normalizePort('3080');
+  var httpsPort = normalizePort('3443');
+
+  /*
+  httpServer.listen(normalizePort(httpPort));
+  httpServer.on('error', onErrorHttp);
+  httpServer.on('listening', onListeningHttp);
+  */
+
+  httpsServer.listen(normalizePort(httpsPort));
+  httpsServer.on('error', onErrorHttps);
+  httpsServer.on('listening', onListeningHttps);
 }
