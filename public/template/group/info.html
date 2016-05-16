@@ -1,0 +1,34 @@
+<div class="row">
+    <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2 col-xs-12">
+        <div class="jumbotron">
+            <legend>그룹 정보</legend>
+
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">항목</th>
+                        <th class="text-center">내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">그룹 번호</td>
+                        <td class="text-center">{{group_info.group_id}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">그룹 이름</td>
+                        <td class="text-center">{{group_info.group_name}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">생성한 사람</td>
+                        <td class="text-center">{{group_info.group_creator.user_name}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">생성 일자</td>
+                        <td class="text-center">{{getDateTimeText(group_info.group_creation_date)}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

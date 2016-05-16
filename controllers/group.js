@@ -253,12 +253,6 @@ function join(req, res, next) {
     });
 }
 
-function left(req, res, next) {
-    let custom_err = new Error('Not implemented yet!');
-    custom_err.status = 403;
-    next(custom_err);
-}
-
 function list(req, res, next) {
 
     //JWT의 decode를 진행한다.
@@ -353,6 +347,5 @@ function members(req, res, next) {
 exports.create = create;
 exports.info = info;
 exports.join = join;
-exports.left = left;
 exports.list = list;
 exports.members = members;
