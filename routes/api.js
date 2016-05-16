@@ -3,16 +3,19 @@
 var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
+var fs = require('fs');
 var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
 
 var auth = require('../controllers/auth');
+var user = require('../controllers/user');
 var group = require('../controllers/group');
 var menu = require('../controllers/menu');
 var setmenu = require('../controllers/setmenu');
 var order = require('../controllers/order');
 var statistics = require('../controllers/statistics');
 
+var ssl_cert = fs.readFileSync(__dirname + '/../ssl/server.crt');
 
 //로그인, 로그아웃 및 회원가입과 관련된 Routes.
 router.post('/auth/signup', auth.signup);
@@ -22,7 +25,7 @@ router.post('/auth/signin', auth.signin);
 router.all('*', function(req, res, next) {
   var decoded_jwt = null;
   try {
-    decoded_jwt = jwt.verify(req.header('Authorization'), value_checker.jwt_secret_key);
+    decoded_jwt = jwt.verify(req.header('Authorization'), ssl_cert);
   }
   catch(err) {
     error_handler.custom_error_handler(401, err.message, err, next);
@@ -32,11 +35,13 @@ router.all('*', function(req, res, next) {
   next();
 });
 
+//유저와 관련된 Routes.
+router.get('/user/myinfo', user.myinfo);
+
 //그룹과 관련된 Routes.
 router.post('/group/create', group.create);
 router.get('/group/info/:group_id', group.info);
 router.post('/group/join', group.join);
-router.post('/group/left', group.left);
 router.get('/group/list', group.list);
 router.get('/group/members/:group_id', group.members);
 
