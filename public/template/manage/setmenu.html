@@ -1,0 +1,77 @@
+<div class="row">
+    <div class="col-md-6">
+        <div class="jumbotron">
+            <legend>세트메뉴 목록</legend>
+
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">이름</th>
+                        <th class="text-center">가격(<i class="fa fa-krw"></i>)</th>
+                        <th class="text-center">내용</th>
+                        <th class="text-center">상태</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="setmenu in setmenu_list">
+                        <td class="text-center"><a href="" ng-click="showSetContent(setmenu.list)">{{setmenu.name}}</a></td>
+                        <td class="text-center"><input class="custom-input text-center" type="text" ng-value="setmenu.price" ng-model="setmenu.price" ng-blur="updateSetMenu(setmenu, setmenu.is_available)"></td>
+                        <td class="text-center custom-change-button" ng-click="showSetContent(setmenu.list)"><a href="">보기</a></td>
+                        <td class="text-center custom-change-button" ng-click="updateSetMenu(setmenu, 0)" ng-show="(setmenu.is_available == 1)">
+                            <a href=""><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>
+                        </td>
+                        <td class="text-center custom-change-button" ng-click="updateSetMenu(setmenu, 1)" ng-show="(setmenu.is_available == 0)">
+                            <a href=""><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="jumbotron">
+            <legend>새 세트메뉴 추가</legend>
+
+            <fieldset>
+                <form ng-submit="addSetMenu()">
+                    <div class="form-group label-floating">
+                        <label class="control-label">이름</label>
+                        <input class="form-control" type="text" ng-model="new_setmenu_name" ng-required="true">
+                    </div>
+
+                    <div class="form-group label-floating">
+                        <label class="control-label">가격</label>
+                        <input class="form-control" type="number" ng-model="new_setmenu_price" ng-required="true">
+                    </div>
+
+                    <div class="form-group">
+                        <label>새 세트 구성 (<a href="" ng-click="clearSetContent()">구성 초기화</a>)</label> <br>
+                        <span ng-repeat="content in newSetContent track by $index">
+                            <span class="label label-default">{{content.name}}</span>
+                        </span>
+                    </div>
+
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th class="text-center">메뉴 이름</th>
+                            <th class="text-center">메뉴 가격</th>
+                            <th class="text-center">추가하기</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="menu in menu_list">
+                            <td class="text-center">{{menu.name}}</td>
+                            <td class="text-center">{{menu.price}}</td>
+                            <td class="text-center"><a href="" ng-click="addMenuIntoNewSet(menu)">구성에 추가</a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">추가하기</button>
+                </form>
+            </fieldset>
+        </div>
+    </div>
+</div>

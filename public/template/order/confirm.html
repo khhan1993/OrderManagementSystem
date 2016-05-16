@@ -1,0 +1,55 @@
+<div class="row">
+    <div class="col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
+        <div class="jumbotron">
+            <legend>주문 처리</legend>
+
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">주문번호</th>
+                        <th class="text-center">주문자 이름</th>
+                        <th class="text-center">내역</th>
+                        <th class="hidden-xs text-center">총 가격(<i class="fa fa-krw"></i>)</th>
+                        <th class="hidden-xs text-center">테이블 번호</th>
+                        <th class="hidden-xs hidden-sm text-center">시간</th>
+                        <th class="text-center" colspan="2">처리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="pending in pending_list">
+                        <td class="text-center">{{pending.id}}</td>
+                        <td class="text-center">{{pending.user_name}}</td>
+                        <td class="text-center custom-change-button" ng-click="show_order_content(pending)"><a href="">보기</a></td>
+                        <td class="hidden-xs text-center">{{pending.total_price}}</td>
+                        <td class="hidden-xs text-center">{{pending.table_num}}</td>
+                        <td class="hidden-xs hidden-sm text-center">{{getDateTimeText(pending.createdAt)}}</td>
+                        <td class="text-center custom-plus-buttion" data-ng-click="update_pending_data(pending.id, 1)">
+                            <a href=""><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>
+                        </td>
+                        <td class="text-center custom-minus-buttion" data-ng-click="update_pending_data(pending.id, 0)">
+                            <a href=""><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="text-center">
+                <ul class="pagination">
+                    <li ng-class="(pagination_info.prev_active) ? '' : 'disabled'">
+                        <a href="" ng-click="gotoPrevPage()" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li ng-repeat="page in pagination_info.pagination_num_list" ng-class="(pagination_info.current_page == page) ? 'active' : ''">
+                        <a href="" ng-click="gotoSpecificPage(page)">{{page}}</a>
+                    </li>
+                    <li ng-class="(pagination_info.next_active) ? '' : 'disabled'">
+                        <a href="" ng-click="gotoNextPage()" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

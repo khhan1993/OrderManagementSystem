@@ -1,0 +1,67 @@
+<div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
+        <div class="jumbotron">
+            <legend>주문 요청</legend>
+
+            <form ng-submit="requestOrder()">
+                <fieldset>
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="text-center">메뉴명</th>
+                                <th class="text-center hidden-xs">가격</th>
+                                <th class="text-center">수량</th>
+                                <th class="text-center" colspan="2">조작</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="menu in menu_list" ng-show="(menu.is_available == 1)">
+                                <td class="text-center" ng-click="updateMenuCount(menu, menu.count + 1)">{{menu.name}}</td>
+                                <td class="text-center hidden-xs">{{menu.price}}</td>
+                                <td class="text-center">{{menu.count}}</td>
+                                <td class="text-center custom-plus-buttion" ng-click="updateMenuCount(menu, menu.count + 1)">
+                                    <a href=""><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                                </td>
+                                <td class="text-center custom-minus-buttion" ng-click="updateMenuCount(menu, menu.count - 1)">
+                                    <a href=""><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="text-center">세트메뉴명</th>
+                                <th class="text-center hidden-xs">가격</th>
+                                <th class="text-center">수량</th>
+                                <th class="text-center" colspan="2">조작</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="setmenu in setmenu_list" ng-show="(setmenu.is_available == 1)">
+                                <td class="text-center" ng-click="updateMenuCount(setmenu, setmenu.count + 1)">{{setmenu.name}}</td>
+                                <td class="text-center hidden-xs">{{setmenu.price}}</td>
+                                <td class="text-center">{{setmenu.count}}</td>
+                                <td class="text-center custom-plus-buttion" ng-click="updateSetMenuCount(setmenu, setmenu.count + 1)">
+                                    <a href=""><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                                </td>
+                                <td class="text-center custom-minus-buttion" ng-click="updateSetMenuCount(setmenu, setmenu.count - 1)">
+                                    <a href=""><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="form-group label-floating">
+                        <label class="control-label">테이블 번호</label>
+                        <input class="form-control" type="number" ng-model="table_num" ng-required="true">
+                    </div>
+
+                    <button class="btn btn-default btn-lg btn-block btn-raised" type="button">총 가격(<i class="fa fa-krw"></i>): {{total_price}}</button>
+                    <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">주문 요청</button>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>

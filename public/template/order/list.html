@@ -1,0 +1,55 @@
+<div class="row">
+    <div class="col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
+        <div class="jumbotron">
+            <legend>주문 내역</legend>
+            <button class="btn btn-raised btn-sm" ng-class="(show_only_my_request == 0) ? 'btn-default' : 'btn-info'" ng-click="changeShowOnlyMyListState()">내 주문 내역만 보기</button>
+
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">주문번호</th>
+                        <th class="text-center">주문자 이름</th>
+                        <th class="text-center">내역</th>
+                        <th class="hidden-xs text-center">총 가격(<i class="fa fa-krw"></i>)</th>
+                        <th class="hidden-xs text-center">테이블 번호</th>
+                        <th class="hidden-xs hidden-sm text-center">시간</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="order in order_list">
+                        <td class="text-center">{{order.id}}</td>
+                        <td class="text-center">{{order.user_name}}</td>
+                        <td class="text-center custom-change-button" ng-click="show_order_content(order)"><a href="">보기</a></td>
+                        <td class="hidden-xs text-center">{{order.total_price}}</td>
+                        <td class="hidden-xs text-center">{{order.table_num}}</td>
+                        <td class="hidden-xs hidden-sm text-center">{{getDateTimeText(order.createdAt)}}</td>
+                        <td class="text-center">
+                            <i ng-show="(order.approve_status != 1 && order.approve_status != 0)" class="fa fa-spinner fa-pulse fa-fw margin-bottom" aria-hidden="true"></i>
+                            <i ng-show="(order.approve_status == 1)" class="fa fa-check" aria-hidden="true"></i>
+                            <i ng-show="(order.approve_status == 0)" class="fa fa-close" aria-hidden="true"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="text-center">
+                <ul class="pagination">
+                    <li ng-class="(pagination_info.prev_active) ? '' : 'disabled'">
+                        <a href="" ng-click="gotoPrevPage()" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li ng-repeat="page in pagination_info.pagination_num_list" ng-class="(pagination_info.current_page == page) ? 'active' : ''">
+                        <a href="" ng-click="gotoSpecificPage(page)">{{page}}</a>
+                    </li>
+                    <li ng-class="(pagination_info.next_active) ? '' : 'disabled'">
+                        <a href="" ng-click="gotoNextPage()" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
