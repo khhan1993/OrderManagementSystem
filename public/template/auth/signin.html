@@ -1,0 +1,26 @@
+<div class="row">
+    <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2 col-xs-12">
+        <div class="jumbotron">
+            <form ng-submit="signin()">
+                <fieldset>
+                    <legend>로그인</legend>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">이메일</label>
+
+                        <div class="col-md-10">
+                            <input type="email" class="form-control" ng-model="email" placeholder="Email" ng-required="true">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">비밀번호</label>
+                        <div class="col-md-10">
+                            <input type="password" class="form-control" ng-model="password" placeholder="Password" ng-required="true">
+                        </div>
+                    </div>
+                </fieldset>
+                <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">로그인</button>
+            </form>
+            <h5>아직 회원이 아니신가요? <a ui-sref="auth.signup">가입하기</a></h5>
+        </div>
+    </div>
+</div>
