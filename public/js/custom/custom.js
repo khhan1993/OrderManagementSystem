@@ -281,37 +281,41 @@ OMS.controller('getCurrentGroupInfoController', function($scope, $http, $cookies
 
 OMS.controller('orderRequestController', function($scope, $http, $state, $cookies, $interval) {
 
-    $http({
-        method: 'GET',
-        url: '/api/menu/list?group_id=' + $cookies.get('selected_group'),
-        headers: {
-            Authorization: $cookies.get('access_token')
-        }
-    }).then(function successCallback(response) {
-        var menu_list_for_convert = response.data.data;
-        for(var i in menu_list_for_convert) {
-            menu_list_for_convert[i].count = 0;
-        }
-        $scope.menu_list = menu_list_for_convert;
-    }, function errorCallback(response) {
-        alert(response.data.message);
-    });
+    $scope.getNewList = function() {
+        $http({
+            method: 'GET',
+            url: '/api/menu/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            var menu_list_for_convert = response.data.data;
+            for(var i in menu_list_for_convert) {
+                menu_list_for_convert[i].count = 0;
+            }
+            $scope.menu_list = menu_list_for_convert;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
 
-    $http({
-        method: 'GET',
-        url: '/api/setmenu/list?group_id=' + $cookies.get('selected_group'),
-        headers: {
-            Authorization: $cookies.get('access_token')
-        }
-    }).then(function successCallback(response) {
-        var setmenu_list_for_convert = response.data.data;
-        for(var i in setmenu_list_for_convert) {
-            setmenu_list_for_convert[i].count = 0;
-        }
-        $scope.setmenu_list = setmenu_list_for_convert;
-    }, function errorCallback(response) {
-        alert(response.data.message);
-    });
+        $http({
+            method: 'GET',
+            url: '/api/setmenu/list?group_id=' + $cookies.get('selected_group'),
+            headers: {
+                Authorization: $cookies.get('access_token')
+            }
+        }).then(function successCallback(response) {
+            var setmenu_list_for_convert = response.data.data;
+            for(var i in setmenu_list_for_convert) {
+                setmenu_list_for_convert[i].count = 0;
+            }
+            $scope.setmenu_list = setmenu_list_for_convert;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.getNewList();
 
     var autoRefresh = $interval(function() {
         $http({
