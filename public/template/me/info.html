@@ -1,0 +1,75 @@
+<div class="row">
+    <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2 col-xs-12">
+        <div class="jumbotron">
+            <legend>내 기본 정보</legend>
+
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">항목</th>
+                        <th class="text-center">내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">회원 번호</td>
+                        <td class="text-center">{{user_info.id}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">이름</td>
+                        <td class="text-center">{{user_info.name}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">이메일</td>
+                        <td class="text-center">{{user_info.email}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">가입 일자</td>
+                        <td class="text-center">{{getDateTimeText(user_info.createdAt)}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">접속 IP</td>
+                        <td class="text-center">{{user_info.ip}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">로그인 유효</td>
+                        <td class="text-center">{{getDateTimeText(user_info.exp)}} 까지</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="jumbotron" ng-show="(group_related_info != null)">
+            <legend>내 주문 통계</legend>
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">항목</th>
+                        <th class="text-center">내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">그룹 번호</td>
+                        <td class="text-center">{{group_related_info.id}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">총 주문 수</td>
+                        <td class="text-center">{{group_related_info.total_order_count}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">승인된 주문 수</td>
+                        <td class="text-center">{{group_related_info.approved_order_count}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">승인된 주문 총 금액</td>
+                        <td class="text-center">{{group_related_info.approved_order_price}} (<i class="fa fa-krw"></i>)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">최근 주문 시간</td>
+                        <td class="text-center">{{getDateTimeText(group_related_info.recent_order)}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

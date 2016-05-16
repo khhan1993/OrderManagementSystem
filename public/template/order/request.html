@@ -1,83 +1,67 @@
-<section class="page-header page-header-light page-header-more-padding">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h1>주문 요청 <button type="button" ng-click="getNewList()" class="btn btn-warning btn-xs mr-xs mb-sm">수동 새로고침</button> <span>새로운 주문을 요청할 수 있습니다.</span></h1>
-                <ul class="breadcrumb breadcrumb-valign-mid">
-                    <li>order</li>
-                    <li>request</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</section>
+<div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
+        <div class="jumbotron">
+            <legend>주문 요청</legend>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-6 col-sm-8 col-md-offset-3 col-sm-offset-2">
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th>메뉴명</th>
-                        <th>가격</th>
-                        <th>수량</th>
-                        <th>조작</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="menu in menu_list" ng-class="(menu.is_available == 0) ? 'danger' : ''">
-                        <td>{{menu.name}}</td>
-                        <td>{{menu.price}}</td>
-                        <td><input class="custom-input" type="text" ng-model="menu.count" ng-blur="updateTotalPriceDirectly()"></td>
-                        <td>
-                            <div ng-show="(menu.is_available == 1)">
-                                <a href="" ng-click="updateMenuCount(menu, menu.count + 1)"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
-                                <a href="" ng-click="updateMenuCount(menu, menu.count - 1)"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></a>
-                                <a href="" ng-click="updateMenuCount(menu, 0)"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>
-                            </div>
-                            <div ng-hide="(menu.is_available == 1)">
-                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <form ng-submit="requestOrder()">
+                <fieldset>
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="text-center">메뉴명</th>
+                                <th class="text-center hidden-xs">가격</th>
+                                <th class="text-center">수량</th>
+                                <th class="text-center" colspan="2">조작</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="menu in menu_list" ng-show="(menu.is_available == 1)">
+                                <td class="text-center" ng-click="updateMenuCount(menu, menu.count + 1)">{{menu.name}}</td>
+                                <td class="text-center hidden-xs">{{menu.price}}</td>
+                                <td class="text-center">{{menu.count}}</td>
+                                <td class="text-center custom-plus-buttion" ng-click="updateMenuCount(menu, menu.count + 1)">
+                                    <a href=""><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                                </td>
+                                <td class="text-center custom-minus-buttion" ng-click="updateMenuCount(menu, menu.count - 1)">
+                                    <a href=""><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th>세트메뉴명</th>
-                        <th>가격</th>
-                        <th>수량</th>
-                        <th>조작</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="setmenu in setmenu_list" ng-class="(setmenu.is_available == 0) ? 'danger' : ''">
-                        <td>{{setmenu.name}}</td>
-                        <td>{{setmenu.price}}</td>
-                        <td><input class="custom-input" type="text" ng-model="setmenu.count" ng-blur="updateTotalPriceDirectly()"></td>
-                        <td>
-                            <div ng-show="(setmenu.is_available == 1)">
-                                <a href="" ng-click="updateSetMenuCount(setmenu, setmenu.count + 1)"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
-                                <a href="" ng-click="updateSetMenuCount(setmenu, setmenu.count - 1)"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></a>
-                                <a href="" ng-click="updateSetMenuCount(setmenu, 0)"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>
-                            </div>
-                            <div ng-hide="(setmenu.is_available == 1)">
-                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="text-center">세트메뉴명</th>
+                                <th class="text-center hidden-xs">가격</th>
+                                <th class="text-center">수량</th>
+                                <th class="text-center" colspan="2">조작</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="setmenu in setmenu_list" ng-show="(setmenu.is_available == 1)">
+                                <td class="text-center" ng-click="updateMenuCount(setmenu, setmenu.count + 1)">{{setmenu.name}}</td>
+                                <td class="text-center hidden-xs">{{setmenu.price}}</td>
+                                <td class="text-center">{{setmenu.count}}</td>
+                                <td class="text-center custom-plus-buttion" ng-click="updateSetMenuCount(setmenu, setmenu.count + 1)">
+                                    <a href=""><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                                </td>
+                                <td class="text-center custom-minus-buttion" ng-click="updateSetMenuCount(setmenu, setmenu.count - 1)">
+                                    <a href=""><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-            <div class="form-group">
-                <label>테이블 번호</label>
-                <input type="number" ng-model="table_num" class="form-control input-lg">
-            </div>
+                    <div class="form-group label-floating">
+                        <label class="control-label">테이블 번호</label>
+                        <input class="form-control" type="number" ng-model="table_num" ng-required="true">
+                    </div>
 
-            <button type="button" class="btn btn-default btn-lg btn-block">총 가격(<i class="fa fa-krw"></i>): {{total_price}}</button>
-            <button type="button" ng-click="requestOrder()" class="btn btn-primary btn-lg btn-block">주문 요청하기</button>
+                    <button class="btn btn-default btn-lg btn-block btn-raised" type="button">총 가격(<i class="fa fa-krw"></i>): {{total_price}}</button>
+                    <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">주문 요청</button>
+                </fieldset>
+            </form>
         </div>
     </div>
 </div>

@@ -1,0 +1,34 @@
+<div class="row">
+    <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2 col-xs-12">
+        <div class="jumbotron">
+            <table class="table table-hover table-bordered">
+                <thead>
+                <tr>
+                    <th class="text-center">그룹 번호</th>
+                    <th class="text-center">그룹 이름</th>
+                    <th class="hidden-xs text-center">생성 일자</th>
+                    <th class="text-center">선택하기</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="group in group_list" ng-class="(selected_group == group.id) ? 'info': ''">
+                    <td class="text-center">{{group.id}}</td>
+                    <td class="text-center">{{group.name}}</td>
+                    <td class="hidden-xs text-center">{{getDateTimeText(group.createdAt)}}</td>
+                    <td class="text-center custom-change-button" ng-click="select_group(group.id)"><a href="">선택</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="jumbotron">
+            <form ng-submit="createNewGroup()">
+                <div class="form-group label-floating">
+                    <label class="control-label">새 그룹 이름</label>
+                    <input class="form-control" type="text" ng-model="new_group_name" ng-required="true">
+                </div>
+
+                <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">생성하기</button>
+            </form>
+        </div>
+    </div>
+</div>

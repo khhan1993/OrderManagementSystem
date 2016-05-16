@@ -5,7 +5,10 @@ var jwt = require('jsonwebtoken');
 var bcrypt = require('bcrypt');
 var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
-var models = require('../models');
+var fs = require('fs');
+var app = require('../app');
+
+var ssl_privatekey = fs.readFileSync(__dirname + '/../ssl/server.key');
 
 function signin(req, res, next) {
 
@@ -24,27 +27,30 @@ function signin(req, res, next) {
     async.series([
         //회원정보 확인
         function(callback) {
-            (models.user).findOne({ where: { email: email }})
-                .then(function(data) {
-                    //회원 정보 미존재 또는 비밀번호 오류
-                    if(!data || !bcrypt.compareSync(password, data.dataValues.password)) {
+            let queryStr = "SELECT * FROM `users` WHERE `email` = ?";
+            let queryVal = [email];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0 || !bcrypt.compareSync(password, rows[0].password)) {
                         error_handler.custom_error_handler(400, 'Wrong email or password!', null, next);
                         return;
                     }
-                    //아직 활성화되지 않음
-                    else if(!data.dataValues.is_active) {
+                    else if(rows[0].is_active != 1) {
                         error_handler.custom_error_handler(401, 'This account is not activated yet!', null, next);
                         return;
                     }
-                    //회원 정보 존재
                     else {
-                        callback(null, data.dataValues);
+                        callback(null, rows[0]);
                     }
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         }
     ],
     function(err, results) {
+        
         //Generate JWT
         var token = jwt.sign({
             uid: results[0].id,
@@ -52,8 +58,9 @@ function signin(req, res, next) {
             email: results[0].email,
             ip_address: req.ip,
             user_agent: req.headers['user-agent']
-        }, value_checker.jwt_secret_key, {
-            expiresIn: "12h"
+        }, ssl_privatekey, {
+            expiresIn: "12h",
+            algorithm: 'RS256'
         });
 
         error_handler.async_final(err, res, next, token);
@@ -78,29 +85,42 @@ function signup(req, res, next) {
     async.series([
         //회원정보 중복검사
         function(callback) {
-            (models.user).find({ where: { email: email }})
-                .then(function(data) {
-                    //회원 정보 미존재
-                    if(!data) {
+            let queryStr = "SELECT * FROM `users` WHERE `email` = ?";
+            let queryVal = [email];
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    if(rows.length == 0) {
                         callback(null);
                     }
-                    //회원 정보 존재
                     else {
                         error_handler.custom_error_handler(400, 'Email already exists!', null, next);
                         return;
                     }
-                })
-                .catch(function(err) { callback(err) });
+                }
+            });
         },
         //회원정보 추가
         function(callback) {
-            var newUser = (models.user).build({
+            let queryStr = "INSERT INTO `users` SET ?";
+            let queryVal = {
                 name: name,
                 email: email,
-                password: bcrypt.hashSync(password, bcrypt.genSaltSync(10))
-            });
+                password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
 
-            newUser.save().then(function() { callback(null) }).catch(function(err) { callback(err) });
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                if(err) {
+                    callback(err);
+                }
+                else {
+                    callback(null);
+                }
+            });
         }
     ],
     function(err, results) {

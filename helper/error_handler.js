@@ -1,12 +1,13 @@
 'use strict';
 
-function async_final(err, res, next, data) {
+function async_final(err, res, next, data, status) {
     if(err) {
         let custom_err = new Error('Database query error!');
         custom_err.status = 500;
         next(custom_err);
     }
     else {
+        res.status(status ? status : 200);
         res.jsonp({
             state: true,
             mesasge: "OK",
