@@ -90,7 +90,6 @@ function info(req, res, next) {
     //그룹 정보 받기
     async.waterfall([
         //우선 해당 그룹에 속한 멤버인지 확인한다.
-        //TODO: DB JOIN으로 수정할 수 있도록 할 것! (2, 3번째 함수)
         function(callback) {
             let queryStr = "SELECT * FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
             let queryVal = [decoded_jwt['uid'], group_id];
