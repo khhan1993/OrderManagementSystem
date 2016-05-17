@@ -52,7 +52,7 @@
                         </span>
                     </div>
 
-                    <table class="table table-hover">
+                    <table class="table table-hover table-bordered">
                         <thead>
                         <tr>
                             <th class="text-center">메뉴 이름</th>
@@ -64,7 +64,7 @@
                         <tr ng-repeat="menu in menu_list">
                             <td class="text-center">{{menu.name}}</td>
                             <td class="text-center">{{menu.price}}</td>
-                            <td class="text-center"><a href="" ng-click="addMenuIntoNewSet(menu)">구성에 추가</a></td>
+                            <td class="text-center custom-change-button" ng-click="addMenuIntoNewSet(menu)"><a href="">구성에 추가</a></td>
                         </tr>
                         </tbody>
                     </table>

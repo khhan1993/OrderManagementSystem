@@ -42,6 +42,7 @@ router.get('/user/myinfo', user.myinfo);
 router.post('/group/create', group.create);
 router.get('/group/info/:group_id', group.info);
 router.post('/group/join', group.join);
+router.post('/group/remove_member', group.removeMember);
 router.get('/group/list', group.list);
 router.get('/group/members/:group_id', group.members);
 

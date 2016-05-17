@@ -754,6 +754,30 @@ OMS.controller('manageMemberController', function($scope, $http, $cookies) {
             }
         }).then(function successCallback(response) {
             $scope.getMemberList();
+            $scope.email = null;
+        }, function errorCallback(response) {
+            alert(response.data.message);
+        });
+    };
+
+    $scope.removeMember = function(user_id) {
+
+        if(!confirm("해당 멤버를 제거하시겠습니까?")) {
+            return;
+        }
+
+        $http({
+            method: 'POST',
+            url: '/api/group/remove_member',
+            headers: {
+                Authorization: $cookies.get('access_token')
+            },
+            data: {
+                group_id: $cookies.get('selected_group'),
+                user_id: user_id
+            }
+        }).then(function successCallback(response) {
+            $scope.getMemberList();
         }, function errorCallback(response) {
             alert(response.data.message);
         });
