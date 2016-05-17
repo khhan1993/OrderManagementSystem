@@ -9,6 +9,7 @@
                         <th class="text-center">회원 번호</th>
                         <th class="text-center">이름</th>
                         <th class="text-center">가입 일자</th>
+                        <th class="text-center">삭제</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -16,6 +17,7 @@
                         <td class="text-center">{{member.id}}</td>
                         <td class="text-center">{{member.name}}</td>
                         <td class="text-center">{{getDateTimeText(member.createdAt)}}</td>
+                        <td class="text-center custom-change-button" ng-click="removeMember(member.id)"><a href=""><i class="fa fa-user-times" aria-hidden="true"></i></a></td>
                     </tr>
                 </tbody>
             </table>
@@ -27,8 +29,8 @@
             <fieldset>
                 <form ng-submit="addMember()">
                     <div class="form-group label-floating">
-                        <label class="control-label">새로 추가할 멤버 이메일</label>
-                        <input class="form-control" type="email" ng-model="email" ng-required="true">
+                        <label class="control-label">새로 추가할 유저 아이디</label>
+                        <input class="form-control" type="text" ng-model="email" ng-required="true">
                     </div>
 
                     <button class="btn btn-primary btn-lg btn-block btn-raised" type="submit">추가하기</button>
