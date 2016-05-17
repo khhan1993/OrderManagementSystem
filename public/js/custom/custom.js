@@ -5,10 +5,14 @@ $.material.init();
 var OMS = angular.module('OMS', ['ui.router', 'ngRoute', 'ngCookies']);
 
 OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
-    $urlRouterProvider.otherwise("/group/list_and_create");
+    $urlRouterProvider.otherwise("/");
     $locationProvider.html5Mode(true);
 
     $stateProvider
+        .state('home', {
+            url: '/',
+            templateUrl: 'template/home.html'
+        })
         .state('me', {
             abstract: true,
             url: '/me',
@@ -175,7 +179,7 @@ OMS.controller('signinController', function($rootScope, $scope, $http, $cookies,
             $cookies.put('access_token', response.data.data, {
                 expires: validDate
             });
-            $state.go('group.list_and_create');
+            $state.go('home');
             $rootScope.is_authenticated = !!$cookies.get('access_token');
         }, function errorCallback(response) {
             alert(response.data.message);
