@@ -11,7 +11,8 @@ OMS.config(function($stateProvider, $urlRouterProvider, $locationProvider) {
     $stateProvider
         .state('home', {
             url: '/',
-            templateUrl: 'template/home.html'
+            templateUrl: 'template/home.html',
+            controller: 'homeController'
         })
         .state('me', {
             abstract: true,
@@ -162,6 +163,15 @@ OMS.controller('navbarController', function($rootScope, $scope, $http, $cookies,
 
         return year + "년 " + month + "월 " + date + "일 " + hour + "시 " + minute + "분";
     };
+});
+
+OMS.controller('homeController', function($rootScope, $state) {
+    if($rootScope.is_authenticated) {
+        $state.go('group.list_and_create');
+    }
+    else {
+        $state.go('auth.signin');
+    }
 });
 
 OMS.controller('signinController', function($rootScope, $scope, $http, $cookies, $state) {

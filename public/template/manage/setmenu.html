@@ -14,7 +14,7 @@
                 </thead>
                 <tbody>
                     <tr ng-repeat="setmenu in setmenu_list">
-                        <td class="text-center"><a href="" ng-click="showSetContent(setmenu.list)">{{setmenu.name}}</a></td>
+                        <td class="text-center">{{setmenu.name}}</td>
                         <td class="text-center"><input class="custom-input text-center" type="text" ng-value="setmenu.price" ng-model="setmenu.price" ng-blur="updateSetMenu(setmenu, setmenu.is_available)"></td>
                         <td class="text-center custom-change-button" ng-click="showSetContent(setmenu.list)"><a href="">보기</a></td>
                         <td class="text-center custom-change-button" ng-click="updateSetMenu(setmenu, 0)" ng-show="(setmenu.is_available == 1)">
