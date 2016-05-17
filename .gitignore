@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 .idea
+.DS_Store
+.git
+=======
 .git
 .idea
 .DS_Store
+>>>>>>> stable
 node_modules
