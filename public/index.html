@@ -62,6 +62,7 @@
             </div>
             <div class="navbar-collapse collapse navbar-responsive-collapse">
                 <ul class="nav navbar-nav">
+                    <li ui-sref-active="active" ng-show="is_authenticated"><a ui-sref="home">메인</a></li>
                     <li class="dropdown" ui-sref-active="active" ng-show="is_authenticated">
                         <a data-target="#" class="dropdown-toggle" data-toggle="dropdown">그룹
                             <b class="caret"></b></a>
