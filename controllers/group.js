@@ -136,7 +136,7 @@ function info(req, res, next) {
         //그룹 정보를 조회한다.
         function(callback) {
             let queryStr = "SELECT `groups`.`id` AS `group_id`, `groups`.`name` AS `group_name`, `groups`.`createdAt` AS `group_creation_date`, `users`.`id` AS `user_id`, `users`.`name` AS `user_name` ";
-            queryStr += "FROM `groups` INNER JOIN `users` ON `groups`.`creator` = `users`.`id` AND `groups`.`id` = ?";
+            queryStr += "FROM `groups` INNER JOIN `users` ON `groups`.`creator` = `users`.`id` WHERE `groups`.`id` = ?";
             let queryVal = [group_id];
             app.db_connection.query(queryStr, queryVal, function (err, rows, fields) {
                 if (err) {
@@ -372,8 +372,8 @@ function list(req, res, next) {
     async.series([
         function(callback) {
             let queryStr = "SELECT `groups`.`id`, `groups`.`name`, `groups`.`createdAt` ";
-            queryStr += "FROM `groups` INNER JOIN `members` ON ";
-            queryStr += "`groups`.`id` = `members`.`group_id` AND `members`.`user_id` = ?";
+            queryStr += "FROM `members` INNER JOIN `groups` ON ";
+            queryStr += "`groups`.`id` = `members`.`group_id` WHERE `members`.`user_id` = ?";
             let queryVal = [decoded_jwt['uid']];
             app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
