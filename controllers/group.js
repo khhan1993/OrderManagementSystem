@@ -21,47 +21,70 @@ function create(req, res, next) {
     }
 
     //그룹 생성 절차를 진행한다.
-    //TODO: Transaction block required!
-    async.waterfall([
-        //그룹 생성
-        function(callback) {
-            let queryStr = "INSERT INTO `groups` SET ?";
-            let queryVal = {
-                name: name,
-                creator: decoded_jwt['uid'],
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null, rows.insertId);
-                }
-            });
-        },
-        //멤버 추가
-        function(group_id, callback) {
-            let queryStr = "INSERT INTO `members` SET ?";
-            let queryVal = {
-                user_id: decoded_jwt['uid'],
-                group_id: group_id,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null);
-                }
-            });
+    app.db_connection.beginTransaction(function(err) {
+        if(err) {
+            error_handler.async_final(err, res, next, null);
+            return;
         }
-    ],
-    function(err, results) {
-        error_handler.async_final(err, res, next, null);
+
+        async.waterfall([
+            //그룹 생성
+            function(callback) {
+                let queryStr = "INSERT INTO `groups` SET ?";
+                let queryVal = {
+                    name: name,
+                    creator: decoded_jwt['uid'],
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                    if(err) {
+                        app.db_connection.rollback(function() {
+                            callback(err);
+                        });
+                    }
+                    else {
+                        callback(null, rows.insertId);
+                    }
+                });
+            },
+            //멤버 추가
+            function(group_id, callback) {
+                let queryStr = "INSERT INTO `members` SET ?";
+                let queryVal = {
+                    user_id: decoded_jwt['uid'],
+                    group_id: group_id,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                    if(err) {
+                        app.db_connection.rollback(function() {
+                            callback(err);
+                        });
+                    }
+                    else {
+                        callback(null);
+                    }
+                });
+            },
+            //Transaction Commit
+            function(callback) {
+                app.db_connection.commit(function(err) {
+                    if(err) {
+                        app.db_connection.rollback(function() {
+                            callback(err);
+                        });
+                    }
+                    else {
+                        callback(null);
+                    }
+                });
+            }
+        ],
+        function(err, results) {
+            error_handler.async_final(err, res, next, null);
+        });
     });
 }
 
@@ -208,7 +231,6 @@ function join(req, res, next) {
             });
         },
         //해당 그룹에 이미 추가되어있는지 확인한다.
-        //TODO: 이 부분에서 Concurrency 문제 발생 가능!
         function(user_info, callback) {
             let queryStr = "SELECT * FROM `members` WHERE `user_id` = ? AND `group_id` = ?";
             let queryVal = [user_info.id, group_id];
@@ -228,7 +250,6 @@ function join(req, res, next) {
             });
         },
         //이제 유저를 이 그룹에 추가한다.
-        //TODO: 이 부분에서 Concurrency 문제 발생 가능!
         function(user_info, callback) {
             let queryStr = "INSERT INTO `members` SET ?";
             let queryVal = {

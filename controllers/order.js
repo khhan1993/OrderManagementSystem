@@ -320,48 +320,45 @@ function confirm(req, res, next) {
                 }
             });
         },
-        //승인 및 취소 절차를 진행한다.
-        //TODO: Transaction Block required!(이 함수와 다음 함수까지)
         function(order_data, callback) {
-            let queryStr = "UPDATE `orders` SET `approve_status` = ?, `updatedAt` = ? WHERE `id` = ?";
-            let queryVal = [is_approve, new Date(), order_id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
-                if(err) {
-                    callback(err);
-                }
-                else {
-                    callback(null, order_data);
-                }
-            });
-        },
-        //주문 승인일 경우 메뉴별 대기열에 삽입한다.
-        //TODO: Transaction Block required!(이 함수와 다음 함수까지!)
-        function(order_data, callback) {
-            if(is_approve == 1) {
-                var order_promise = [];
+            var async_func_list = [];
 
+            async_func_list.push(function(_callback) {
+                let queryStr = "UPDATE `orders` SET `approve_status` = ?, `updatedAt` = ? WHERE `id` = ?";
+                let queryVal = [is_approve, new Date(), order_id];
+                app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                    if(err) {
+                        _callback(err);
+                    }
+                    else {
+                        _callback(null);
+                    }
+                });
+            });
+
+            if(is_approve == 1) {
                 //일반 주문의 처리
                 var order_content = JSON.parse(order_data.content);
                 for(var i in order_content) {
-                    order_promise.push(new Promise(function(resolve, reject) {
-                        let queryStr = "INSERT INTO `waitings` SET ?";
-                        let queryVal = {
-                            group_id: order_data.group_id,
-                            menu_id: order_content[i].id,
-                            amount: order_content[i].count,
-                            table_num: order_data.table_num,
-                            createdAt: new Date(),
-                            updatedAt: new Date()
-                        };
+                    let queryStr = "INSERT INTO `waitings` SET ?";
+                    let queryVal = {
+                        group_id: order_data.group_id,
+                        menu_id: order_content[i].id,
+                        amount: order_content[i].count,
+                        table_num: order_data.table_num,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    };
+                    async_func_list.push(function(_callback) {
                         app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                             if(err) {
-                                reject(err);
+                                _callback(err);
                             }
                             else {
-                                resolve(null);
+                                _callback(null);
                             }
                         });
-                    }));
+                    });
                 }
 
                 var menu_list = [];
@@ -404,25 +401,25 @@ function confirm(req, res, next) {
                                 for(var x in list_in_set) {
                                     for(var y in menu_list) {
                                         if(list_in_set[x] == menu_list[y].id) {
-                                            order_promise.push(new Promise(function(resolve, reject) {
-                                                let queryStr = "INSERT INTO `waitings` SET ?";
-                                                let queryVal = {
-                                                    group_id: order_data.group_id,
-                                                    menu_id: menu_list[y].id,
-                                                    amount: order_set_content[i].count,
-                                                    table_num: order_data.table_num,
-                                                    createdAt: new Date(),
-                                                    updatedAt: new Date()
-                                                };
+                                            let queryStr = "INSERT INTO `waitings` SET ?";
+                                            let queryVal = {
+                                                group_id: order_data.group_id,
+                                                menu_id: menu_list[y].id,
+                                                amount: order_set_content[i].count,
+                                                table_num: order_data.table_num,
+                                                createdAt: new Date(),
+                                                updatedAt: new Date()
+                                            };
+                                            async_func_list.push(function(_callback) {
                                                 app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                                                     if(err) {
-                                                        reject(err);
+                                                        _callback(err);
                                                     }
                                                     else {
-                                                        resolve(null);
+                                                        _callback(null);
                                                     }
                                                 });
-                                            }));
+                                            });
                                         }
                                     }
                                 }
@@ -430,18 +427,59 @@ function confirm(req, res, next) {
                         }
                     }
 
-                    Promise.all(order_promise).then(function(values) {
-                        callback(null);
-                    }, function(err) {
-                        callback(err);
+                    app.db_connection.beginTransaction(function(err) {
+                        if(err) {
+                            callback(err);
+                        }
+                        else {
+                            async.series(async_func_list, function(err, results) {
+                                if(err) {
+                                    app.db_connection.rollback(function() {
+                                        callback(err);
+                                    });
+                                }
+                                else {
+                                    callback(null);
+                                }
+                            });
+                        }
                     });
                 }, function(err) {
                     callback(err);
                 });
             }
             else {
-                callback(null);
+                app.db_connection.beginTransaction(function(err) {
+                    if(err) {
+                        callback(err);
+                    }
+                    else {
+                        async.series(async_func_list, function(err, results) {
+                            if(err) {
+                                app.db_connection.rollback(function() {
+                                    callback(err);
+                                });
+                            }
+                            else {
+                                callback(null);
+                            }
+                        });
+                    }
+                });
             }
+        },
+        //Transaction Commit
+        function(callback) {
+            app.db_connection.commit(function(err) {
+                if(err) {
+                    app.db_connection.rollback(function() {
+                        callback(err);
+                    });
+                }
+                else {
+                    callback(null);
+                }
+            });
         }
     ],
     function(err, results) {
