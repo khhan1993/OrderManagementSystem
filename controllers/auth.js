@@ -35,7 +35,7 @@ function signin(req, res, next) {
                 }
                 else {
                     if(rows.length == 0 || !bcrypt.compareSync(password, rows[0].password)) {
-                        error_handler.custom_error_handler(400, 'Wrong email or password!', null, next);
+                        error_handler.custom_error_handler(400, 'Wrong ID or password!', null, next);
                         return;
                     }
                     else if(rows[0].is_active != 1) {
@@ -81,6 +81,14 @@ function signup(req, res, next) {
         return;
     }
 
+    //정규표현식 검사
+    var regExp1 = /^[A-Za-z0-9+]*$/;
+    var regExp2 = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if(!regExp1.test(email) && !regExp2.test(email)) {
+        error_handler.custom_error_handler(400, 'ID must be combination of alphabet and number, or email form!', null, next);
+        return;
+    }
+
     //회원가입 절차 시작
     async.series([
         //회원정보 중복검사
@@ -96,7 +104,7 @@ function signup(req, res, next) {
                         callback(null);
                     }
                     else {
-                        error_handler.custom_error_handler(400, 'Email already exists!', null, next);
+                        error_handler.custom_error_handler(400, 'ID already exists!', null, next);
                         return;
                     }
                 }
