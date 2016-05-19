@@ -155,7 +155,7 @@ function clear_waiting(req, res, next) {
         function(waiting_data, callback) {
             let queryStr = "UPDATE `waitings` SET `is_served` = 1, `updatedAt` = ? WHERE `id` = ?";
             let queryVal = [new Date(), waiting_id];
-            app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
