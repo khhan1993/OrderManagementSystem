@@ -234,7 +234,7 @@ function request(req, res, next) {
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+            app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
@@ -326,9 +326,11 @@ function confirm(req, res, next) {
             async_func_list.push(function(_callback) {
                 let queryStr = "UPDATE `orders` SET `approve_status` = ?, `updatedAt` = ? WHERE `id` = ?";
                 let queryVal = [is_approve, new Date(), order_id];
-                app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
                     if(err) {
-                        _callback(err);
+                        app.db_connection_write.rollback(function() {
+                            _callback(err);
+                        });
                     }
                     else {
                         _callback(null);
@@ -350,9 +352,11 @@ function confirm(req, res, next) {
                         updatedAt: new Date()
                     };
                     async_func_list.push(function(_callback) {
-                        app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                        app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
                             if(err) {
-                                _callback(err);
+                                app.db_connection_write.rollback(function() {
+                                    _callback(err);
+                                });
                             }
                             else {
                                 _callback(null);
@@ -411,9 +415,11 @@ function confirm(req, res, next) {
                                                 updatedAt: new Date()
                                             };
                                             async_func_list.push(function(_callback) {
-                                                app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+                                                app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
                                                     if(err) {
-                                                        _callback(err);
+                                                        app.db_connection_write.rollback(function() {
+                                                            _callback(err);
+                                                        });
                                                     }
                                                     else {
                                                         _callback(null);
@@ -427,14 +433,14 @@ function confirm(req, res, next) {
                         }
                     }
 
-                    app.db_connection.beginTransaction(function(err) {
-                        if(err) {
-                            callback(err);
+                    app.db_connection_write.beginTransaction(function(_err) {
+                        if(_err) {
+                            callback(_err);
                         }
                         else {
                             async.series(async_func_list, function(err, results) {
                                 if(err) {
-                                    app.db_connection.rollback(function() {
+                                    app.db_connection_write.rollback(function() {
                                         callback(err);
                                     });
                                 }
@@ -449,14 +455,14 @@ function confirm(req, res, next) {
                 });
             }
             else {
-                app.db_connection.beginTransaction(function(err) {
-                    if(err) {
-                        callback(err);
+                app.db_connection_write.beginTransaction(function(_err) {
+                    if(_err) {
+                        callback(_err);
                     }
                     else {
                         async.series(async_func_list, function(err, results) {
                             if(err) {
-                                app.db_connection.rollback(function() {
+                                app.db_connection_write.rollback(function() {
                                     callback(err);
                                 });
                             }
@@ -470,9 +476,9 @@ function confirm(req, res, next) {
         },
         //Transaction Commit
         function(callback) {
-            app.db_connection.commit(function(err) {
+            app.db_connection_write.commit(function(err) {
                 if(err) {
-                    app.db_connection.rollback(function() {
+                    app.db_connection_write.rollback(function() {
                         callback(err);
                     });
                 }

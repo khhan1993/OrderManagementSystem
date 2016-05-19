@@ -121,7 +121,7 @@ function signup(req, res, next) {
                 updatedAt: new Date()
             };
 
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+            app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
