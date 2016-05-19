@@ -68,7 +68,7 @@ function create(req, res, next) {
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+            app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
@@ -160,7 +160,7 @@ function update(req, res, next) {
         function(menu_data, callback) {
             let queryStr = "UPDATE `menus` SET `price` = ?, `is_available` = ?, `updatedAt` = ? WHERE `id` = ?";
             let queryVal = [price, is_available, new Date(), menu_data.id];
-            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
+            app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
