@@ -9,16 +9,7 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var fs = require('fs');
 
-//Replication 구성 시 Slave의 정보를 적는다.
 var db_connection = mysql.createConnection({
-  host     : '127.0.0.1',
-  user     : 'OrderManagementSystem',
-  password : 'doFG2AOcYWPKZMRQ',
-  database : 'OrderManagementSystem'
-});
-
-//Replication 구성 시 Master의 정보를 적는다.
-var db_connection_write = mysql.createConnection({
   host     : '127.0.0.1',
   user     : 'OrderManagementSystem',
   password : 'doFG2AOcYWPKZMRQ',
@@ -33,17 +24,6 @@ db_connection.connect(function(err) {
   }
   else {
     console.log("DB server 1 connected...");
-  }
-});
-
-db_connection_write.connect(function(err) {
-  if(err) {
-    console.error("Can't connect to DB server 2!");
-    console.error(err);
-    process.exit(-1);
-  }
-  else {
-    console.log("DB server 2 connected...");
   }
 });
 
@@ -105,4 +85,3 @@ app.use(function(err, req, res, next) {
 
 exports.express = app;
 exports.db_connection = db_connection;
-exports.db_connection_write = db_connection_write;

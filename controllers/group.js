@@ -21,7 +21,7 @@ function create(req, res, next) {
     }
 
     //그룹 생성 절차를 진행한다.
-    app.db_connection_write.beginTransaction(function(_err) {
+    app.db_connection.beginTransaction(function(_err) {
         if(_err) {
             error_handler.async_final(_err, res, next, null);
             return;
@@ -37,9 +37,9 @@ function create(req, res, next) {
                     createdAt: new Date(),
                     updatedAt: new Date()
                 };
-                app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
+                app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                     if(err) {
-                        app.db_connection_write.rollback(function() {
+                        app.db_connection.rollback(function() {
                             callback(err);
                         });
                     }
@@ -57,9 +57,9 @@ function create(req, res, next) {
                     createdAt: new Date(),
                     updatedAt: new Date()
                 };
-                app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
+                app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                     if(err) {
-                        app.db_connection_write.rollback(function() {
+                        app.db_connection.rollback(function() {
                             callback(err);
                         });
                     }
@@ -70,9 +70,9 @@ function create(req, res, next) {
             },
             //Transaction Commit
             function(callback) {
-                app.db_connection_write.commit(function(err) {
+                app.db_connection.commit(function(err) {
                     if(err) {
-                        app.db_connection_write.rollback(function() {
+                        app.db_connection.rollback(function() {
                             callback(err);
                         });
                     }
@@ -258,7 +258,7 @@ function join(req, res, next) {
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
-            app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
@@ -348,7 +348,7 @@ function removeMember(req, res, next) {
         function(member_id, callback) {
             let queryStr = "DELETE FROM `members` WHERE `id` = ? AND `group_id` = ?";
             let queryVal = [member_id, group_id];
-            app.db_connection_write.query(queryStr, queryVal, function(err, rows, fields) {
+            app.db_connection.query(queryStr, queryVal, function(err, rows, fields) {
                 if(err) {
                     callback(err);
                 }
