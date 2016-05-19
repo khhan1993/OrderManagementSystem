@@ -117,6 +117,10 @@ OMS.controller('navbarController', function($rootScope, $scope, $http, $cookies,
         $rootScope.is_group_selected = (!!$cookies.get('selected_group'));
         if($rootScope.is_authenticated) {
             $rootScope.decoded_token = JSON.parse(atob(($cookies.get('access_token')).split('.')[1]));
+
+            if($state.is('auth.signin') || $state.is('auth.signup')) {
+                $state.go('home');
+            }
         }
         else {
             $rootScope.decoded_token = null;
