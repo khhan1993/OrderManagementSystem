@@ -18,12 +18,12 @@ var db_connection = mysql.createConnection({
 
 db_connection.connect(function(err) {
   if(err) {
-    console.error("Can't connect to DB server 1!");
+    console.error("Can't connect to DB server!");
     console.error(err);
     process.exit(-1);
   }
   else {
-    console.log("DB server 1 connected...");
+    console.log("DB server connected...");
   }
 });
 

@@ -19,7 +19,7 @@ function jwt_checker(token) {
 
 function is_empty_check(checklist) {
     for(var i in checklist) {
-        if(typeof checklist[i] == "undefined" || checklist[i] == null || checklist[i] == "") {
+        if(typeof checklist[i] == "undefined" || checklist[i] == null || checklist[i].toString() == "") {
             return true;
         }
     }
