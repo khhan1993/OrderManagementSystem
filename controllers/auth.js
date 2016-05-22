@@ -7,8 +7,17 @@ var value_checker = require('../helper/value_checker');
 var error_handler = require('../helper/error_handler');
 var fs = require('fs');
 var app = require('../app');
+var FileStreamRotator = require('file-stream-rotator');
+var path = require('path');
 
 var ssl_privatekey = fs.readFileSync(__dirname + '/../ssl/server.key');
+
+var loginLogStream = FileStreamRotator.getStream({
+    date_format: 'YYYY-MM-DD',
+    filename: path.join(__dirname, '../', 'log', 'login-%DATE%.txt'),
+    frequency: 'daily',
+    verbose: false
+});
 
 function signin(req, res, next) {
 
@@ -64,6 +73,18 @@ function signin(req, res, next) {
         });
 
         error_handler.async_final(err, res, next, token);
+
+        var login_log_data = "";
+        login_log_data += "<<Login Time>>\n";
+        login_log_data += new Date() + "\n";
+        login_log_data += "<<Login info>>\n";
+        login_log_data += JSON.stringify(value_checker.jwt_checker(token)) + "\n";
+        login_log_data += "<<Login IP>>\n";
+        login_log_data += req.ip + "\n";
+        login_log_data += "\n";
+
+        loginLogStream.write(login_log_data);
+        
     });
 }
 

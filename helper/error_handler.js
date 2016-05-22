@@ -2,7 +2,7 @@
 
 function async_final(err, res, next, data, status) {
     if(err) {
-        let custom_err = new Error('Database query error!');
+        let custom_err = new Error('Database query error!\n' + "[" + err.code + "]");
         custom_err.status = 500;
         next(custom_err);
     }

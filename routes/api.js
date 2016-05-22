@@ -28,7 +28,7 @@ router.all('*', function(req, res, next) {
     decoded_jwt = jwt.verify(req.header('Authorization'), ssl_cert);
   }
   catch(err) {
-    error_handler.custom_error_handler(401, err.message, err, next);
+    error_handler.custom_error_handler(401, "Please sign-in again!\n" + "[" + err.message + "]", err, next);
     return;
   }
 

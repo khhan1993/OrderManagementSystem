@@ -6,18 +6,24 @@
 
 "use strict";
 
+var fs = require('fs');
+var path = require('path');
+
+//로그 기록 directory가 있는지 확인하고 없으면 생성한다.
+if(!fs.existsSync(path.join(__dirname, '../', 'log'))) {
+  fs.mkdirSync(path.join(__dirname, '../', 'log'));
+}
+
 var express = require('../app').express;
 var debug = require('debug')('OMS:server');
 var https = require('https');
 var http = require('http');
-var fs = require('fs');
 var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
 
 //SSL files
 var privateKey = fs.readFileSync(__dirname + '/../ssl/server.key');
 var sslCertificate = fs.readFileSync(__dirname + '/../ssl/server.crt');
-
 
 /**
  * Normalize a port into a number, string, or false.
@@ -116,7 +122,6 @@ function onListeningHttps() {
       : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
-
 
 //Cluster를 이용하여 멀티코어 처리를 한다.
 if(cluster.isMaster) {
