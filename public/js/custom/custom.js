@@ -674,7 +674,7 @@ OMS.controller('statisticsWaitingController', function($rootScope, $scope, $http
                             if($scope.menu_list[i].waiting_list.length < 5) {
                                 $scope.menu_list[i].waiting_list.push({
                                     id: response.data.data.waitings[j].id,
-                                    content: "T" + response.data.data.waitings[j].table_num + " / " + response.data.data.waitings[j].amount + "개"
+                                    content: "T-" + response.data.data.waitings[j].table_num + " / " + response.data.data.waitings[j].amount + "개"
                                 });
                             }
                             else if($scope.menu_list[i].waiting_list.length == 5) {

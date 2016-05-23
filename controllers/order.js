@@ -26,15 +26,14 @@ function request(req, res, next) {
     var set_menus = (!!req.body.setmenus) ? req.body.setmenus : null;
 
     //음이 아닌 정수인지 확인.
-    var num_check_list = [group_id, table_num];
+    var num_check_list = [group_id];
     if(!value_checker.is_positive_integer_check(num_check_list)) {
-        error_handler.custom_error_handler(400, 'GroupID and TableNum must be integer format!', null, next);
+        error_handler.custom_error_handler(400, 'GroupID must be integer format!', null, next);
         return;
     }
 
     //숫자로 형변환
     group_id = parseInt(group_id);
-    table_num = parseInt(table_num);
 
     //필요한 정보만 필터링한다. (메뉴 부분)
     var filtered_menu = [];
