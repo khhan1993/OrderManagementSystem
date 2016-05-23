@@ -84,8 +84,8 @@ app.use(function(err, req, res, next) {
   error_log_data += JSON.stringify(value_checker.jwt_checker(req.header('Authorization'))) + "\n";
   error_log_data += "<<Request IP>>\n";
   error_log_data += req.ip + "\n";
-  error_log_data += "<<Request Query>>\n";
-  error_log_data += JSON.stringify(req.query) + "\n";
+  error_log_data += "<<Request URL>>\n";
+  error_log_data += JSON.stringify(req.url) + "\n";
   error_log_data += "<<Request Body>>\n";
   error_log_data += JSON.stringify(req.body) + "\n";
   error_log_data += "\n";
