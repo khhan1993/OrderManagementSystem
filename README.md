@@ -41,6 +41,7 @@ var db_connection = mysql.createConnection({
 app.js 의 34번째 줄 부터 39번째 줄에 해당하는 코드 주석 제거.
 bin/www 의 21, 22, 46 ~ 49, 56, 62 ~ 64 번째 줄에 해당하는 코드 주석 제거.
 bin/www 의 56번째 줄에서 사용하고자 하는 포트를 지정합니다.
+ssl directory 에 인증서와 개인키를 복사합니다. (server.crt가 인증서, server.key가 개인키.)
 ```
 
 ### Start 'OrderManagementSystem' web server
