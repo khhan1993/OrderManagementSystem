@@ -18,8 +18,8 @@ var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
 
 //SSL files
-var privateKey = fs.readFileSync(__dirname + '/../ssl/server.key');
-var sslCertificate = fs.readFileSync(__dirname + '/../ssl/server.crt');
+//var privateKey = fs.readFileSync(__dirname + '/../ssl/server.key');
+//var sslCertificate = fs.readFileSync(__dirname + '/../ssl/server.crt');
 
 //Cluster를 이용하여 멀티코어 처리를 한다.
 if(cluster.isMaster) {
@@ -35,7 +35,7 @@ else {
 
   var debug = require('debug')('OMS:server');
   var express = require('../app').express;
-  var https = require('https');
+  //var https = require('https');
   var http = require('http');
 
   /**
@@ -43,10 +43,10 @@ else {
    */
 
   var httpServer = http.createServer(express);
-  var httpsServer = https.createServer({
-    key: privateKey,
-    cert: sslCertificate
-  }, express);
+  //var httpsServer = https.createServer({
+  //  key: privateKey,
+  //  cert: sslCertificate
+  //}, express);
 
   /**
    * Listen on provided port, on all network interfaces.
@@ -59,9 +59,9 @@ else {
   httpServer.on('error', onErrorHttp);
   httpServer.on('listening', onListeningHttp);
 
-  httpsServer.listen(normalizePort(httpsPort));
-  httpsServer.on('error', onErrorHttps);
-  httpsServer.on('listening', onListeningHttps);
+  //httpsServer.listen(normalizePort(httpsPort));
+  //httpsServer.on('error', onErrorHttps);
+  //httpsServer.on('listening', onListeningHttps);
 }
 
 /**

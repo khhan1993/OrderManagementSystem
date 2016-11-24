@@ -31,12 +31,12 @@ var api = require('./routes/api');
 var app = express();
 
 app.enable('trust proxy');
-app.use(function(req, res, next) {
-  if (!req.secure) {
-    return res.redirect('https://' + req.headers.host + req.url);
-  }
-  next();
-});
+//app.use(function(req, res, next) {
+//  if (!req.secure) {
+//    return res.redirect('https://' + req.headers.host + req.url);
+//  }
+//  next();
+//});
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
